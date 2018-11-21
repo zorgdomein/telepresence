@@ -5,3 +5,6 @@ docs/.bundle
 virtualenv
 */__pycache__
 *cache*
+
+mkosi.cache
+environments
