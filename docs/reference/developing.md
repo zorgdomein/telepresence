@@ -8,6 +8,17 @@
 
 ### Setting up a development environment
 
+The Telepresence test suite is designed to run against a [GKE][]
+cluster.  So, to run the tests, you'll need to create a Google Cloud
+account, generate a service key, and save it to
+`./gcloud-service-key.json`.
+
+> At some point, we'd like to get it running against a [Kubernaut][]
+> cluster instead.
+
+GKE: https://cloud.google.com/kubernetes-engine/
+Kubernaut: https://www.datawire.io/announcing-kubernaut-instantaneous-ephemeral-kubernetes-clusters-cloud/
+
 The following instructions will gets the Telepresence source and sets up some of its dependencies (torsocks, gcloud).
 It also creates a virtualenv and installs Telepresence's Python dependencies into it.
 The arguments required for `environment-setup.sh` are Google Cloud configuration items which identify a GKE cluster which can be used for testing, plus the operating system.

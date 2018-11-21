@@ -119,6 +119,16 @@ jobs:
           command: |
             sudo apt-get --quiet update
 
+      - run:
+          name: "install testbench"
+          command: |
+            sudo apt-get install python3-setuptools qemu-system-x86 ovmf docker curl
+            curl -OL http://releases.datawire.io/kubernaut/$(curl http://releases.datawire.io/kubernaut/latest.txt)/linux/amd64/kubernaut
+            sudo install -m755 kubernaut /usr/bin/kubernaut
+            git clone https://github.com/datawire/testbench
+            cd testbench
+            sudo python3 setup.py install
+
       - "checkout"
 
       - run:

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+cmds=(
+	conntrack
+	gcloud
+	kubectl
+	python3
+	sshfs
+	torsocks
+	virtualenv
+)
+
+RESET=$(tput sgr0)
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+
+ret=0
+for cmd in "${cmds[@]}"; do
+	if path=$(type -p "$cmd"); then
+		echo "    $cmd|${GREEN}${path}${RESET}"
+	else
+		ret=1
+		echo "    $cmd|${RED}missing${RESET}"
+	fi
+done > >(column -t -s'|')
+exit $ret

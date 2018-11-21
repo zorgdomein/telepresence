@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+if [ "$#" -ne 3 ]; then
+	echo "Usage: $0 <gcloud project name> <gcloud cluster name> <gcloud compute zone>"
+	echo "  (See .circleci/config.yml for sample values)"
+	exit 1
+fi
+
+SERVICE_KEY=gcloud-service-key.json
+
+if [ ! -e "${SERVICE_KEY}" ]; then
+	printf 'Provide gcloud service account key in ``%s``\n' "$SERVICE_KEY"
+	echo "Obtain one from GCP Console:"
+	echo "    APIs & Services > Credentials > Create credentials > Service account key"
+	exit 1
+fi
+
+set -ex
+
+PROJECT_NAME=$1
+CLUSTER_NAME=$2
+CLOUDSDK_COMPUTE_ZONE=$3
+
+gcloud --quiet version
+gcloud auth activate-service-account --key-file "${SERVICE_KEY}"
+
+gcloud --quiet config set project $PROJECT_NAME
+gcloud --quiet config set container/cluster $CLUSTER_NAME
+gcloud --quiet config set compute/zone ${CLOUDSDK_COMPUTE_ZONE}
+gcloud --quiet container clusters get-credentials $CLUSTER_NAME
+
+# `gcloud docker` implicitly generates Docker authentication configuration for
+# gcr.io from the specified service key.  For the test suite to complete, when
+# the registry is gcr.io, Docker needs to be able to pull images.  This
+# enables that.
+if type -p docker; then
+	# Only do this if Docker is installed, though, otherwise it's an error.
+	gcloud --quiet docker --authorize-only
+fi
