@@ -32,7 +32,7 @@ class PortMapping(object):
     """Maps local ports to listen to remote exposed ports."""
 
     def __init__(self):
-        self._mapping = {}  # type: Dict[int,int]
+        self._mapping: Dict[int,int] = {}
 
     @classmethod
     def parse(cls, port_strings: List[str]):

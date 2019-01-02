@@ -52,8 +52,8 @@ class RemoteInfo(object):
                 "Could not find container with image "
                 "'datawire/telepresence-k8s' in pod {}.".format(pod_name)
             )
-        self.container_config = containers[0]  # type: Dict
-        self.container_name = self.container_config["name"]  # type: str
+        self.container_config: Dict = containers[0]
+        self.container_name: str = self.container_config["name"]
 
     def remote_telepresence_version(self) -> str:
         """Return the version used by the remote Telepresence container."""

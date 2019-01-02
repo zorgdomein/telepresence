@@ -70,8 +70,8 @@ class NotThisMethod(Exception):
 
 
 Any  # Avoid Pyflakes F401
-LONG_VERSION_PY = {}  # type: Any
-HANDLERS = {}  # type: Any
+LONG_VERSION_PY: Any = {}
+HANDLERS: Any = {}
 
 
 def register_vcs_handler(vcs, method):  # decorator

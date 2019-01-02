@@ -196,7 +196,7 @@ def serviceCIDR(runner: Runner):
         ]
 
     service_ips = get_service_ips()
-    new_services = []  # type: List[str]
+    new_services: List[str] = []
     # Ensure we have at least 8 ClusterIP Services:
     while len(service_ips) + len(new_services) < 8:
         new_service = random_name()

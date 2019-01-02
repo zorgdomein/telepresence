@@ -35,7 +35,7 @@ def get_remote_env(runner: Runner, ssh: SSH, remote_info: RemoteInfo
             )
         )
         pod_info = loads(json_data)
-        remote_env = pod_info["env"]  # type: Dict[str,str]
+        remote_env: Dict[str,str] = pod_info["env"]
 
         # Tell local process about the remote setup, useful for testing and
         # debugging:

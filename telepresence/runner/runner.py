@@ -60,12 +60,12 @@ class Runner(object):
         self.kubectl = kubeinfo
         self.verbose = verbose
         self.start_time = time()
-        self.current_span = None  # type: typing.Optional[Span]
+        self.current_span: typing.Optional[Span] = None
         self.counter = 0
-        self.cleanup_stack = []  # type: typing.List[_CleanupItem]
+        self.cleanup_stack: typing.List[_CleanupItem] = []
         self.sudo_held = False
         self.quitting = False
-        self.ended = []  # type: typing.List[str]
+        self.ended: typing.List[str] = []
 
         if sys.platform.startswith("linux"):
             self.platform = "linux"
@@ -343,7 +343,7 @@ class Runner(object):
     def get_output(self, args, reveal=False, **kwargs) -> str:
         """Return (stripped) command result as unicode string."""
         self.counter = track = self.counter + 1
-        capture = []  # type: typing.List[str]
+        capture: typing.List[str] = []
         if reveal or self.verbose:
             out_cb = self._make_logger(track, capture=capture)
         else:
@@ -401,7 +401,7 @@ class Runner(object):
 
         """
         self.counter = track = self.counter + 1
-        capture = deque(maxlen=10)  # type: typing.MutableSequence[str]
+        capture: typing.MutableSequence[str] = deque(maxlen=10)
         out_cb = err_cb = self._make_logger(track, capture=capture)
 
         def done(proc):

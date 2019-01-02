@@ -60,7 +60,7 @@ class Output(object):
         self.logfile_path = logfile_path
 
         self.start_time = curtime()
-        self.logtail = deque(maxlen=25)  # type: deque  # keep last 25 lines
+        self.logtail: deque = deque(maxlen=25)  # keep last 25 lines
 
         self.write(
             "Telepresence {} launched at {}".format(__version__, ctime())
