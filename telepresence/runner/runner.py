@@ -39,14 +39,11 @@ from .launch import BackgroundProcessCrash, _launch_command
 from .output import Output
 from .span import Span
 
-_CleanupItem = typing.NamedTuple(
-    "_CleanupItem", [
-        ("name", str),
-        ("callable", typing.Callable),
-        ("args", typing.Tuple),
-        ("kwargs", typing.Dict[str, typing.Any]),
-    ]
-)
+class _CleanupItem(typing.NamedTuple):
+    name: str
+    callable: typing.Callable
+    args: typing.Tuple
+    kwargs: typing.Dict[str, typing.Any]
 
 
 class Runner(object):
@@ -550,7 +547,7 @@ class Runner(object):
         failures = "\n\n".join(self.ended)
         raise BackgroundProcessCrash(message, failures)
 
-    def fail(self, message: str, code=1) -> SystemExit:
+    def fail(self, message: str, code=1) -> typing.NoReturn:
         """
         Report failure to the user and exit. Does not return. Cleanup will run
         before the process ends. This does not invoke the crash reporter; an
@@ -565,9 +562,8 @@ class Runner(object):
         self.show("\n")
         self.write("EXITING with status code {}".format(code))
         exit(code)
-        return SystemExit(code)  # Not reached; just here for the linters
 
-    def exit(self) -> SystemExit:
+    def exit(self) -> typing.NoReturn:
         """
         Exit after a successful session. Does not return. Cleanup will run
         before the process ends.
@@ -576,7 +572,6 @@ class Runner(object):
         Span.emit_summary = True
         self.write("EXITING successful session.")
         exit(0)
-        return SystemExit(0)  # Not reached; just here for the linters
 
     def wait_for_exit(self, main_process: Popen) -> None:
         """
