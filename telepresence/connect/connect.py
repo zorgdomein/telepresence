@@ -13,9 +13,9 @@
 # limitations under the License.
 
 from subprocess import STDOUT, CalledProcessError
-from typing import Tuple
+from typing import Callable, Tuple
 
-from telepresence.cli import PortMapping
+from telepresence.cli import Args, PortMapping
 from telepresence.proxy import RemoteInfo
 from telepresence.runner import Runner, launch_local_server
 from telepresence.utilities import find_free_port
@@ -33,6 +33,7 @@ def connect(
 
     Return (local port of SOCKS proxying tunnel, SSH instance).
     """
+    assert runner.kubectl is not None
     span = runner.span()
     # Keep local copy of pod logs, for debugging purposes:
     runner.launch(
@@ -83,7 +84,7 @@ def connect(
     return socks_port, ssh
 
 
-def setup(runner: Runner, args):
+def setup(runner: Runner, args: Args) -> Callable[[Runner, RemoteInfo], Tuple[int, SSH]]:
     # Make sure we can run openssh:
     runner.require(["ssh"], "Please install the OpenSSH client")
     try:
@@ -95,7 +96,7 @@ def setup(runner: Runner, args):
 
     is_container_mode = args.method == "container"
 
-    def do_connect(runner_: Runner, remote_info: RemoteInfo):
+    def do_connect(runner_: Runner, remote_info: RemoteInfo) -> Tuple[int, SSH]:
         return connect(runner_, remote_info, is_container_mode, args.expose)
 
     return do_connect

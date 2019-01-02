@@ -17,7 +17,7 @@ import shlex
 import socket
 from subprocess import Popen, TimeoutExpired
 from time import time
-from typing import Iterable, List
+from typing import Iterable, List, cast
 
 
 def random_name() -> str:
@@ -35,7 +35,7 @@ def find_free_port() -> int:
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
         s.bind(("", 0))
-        return s.getsockname()[1]
+        return cast(int, s.getsockname()[1])
     finally:
         s.close()
 
@@ -65,7 +65,7 @@ def get_alternate_nameserver() -> str:
     raise RuntimeError("All known public nameservers are in /etc/resolv.conf.")
 
 
-def str_command(args: Iterable[str]):
+def str_command(args: Iterable[str]) -> str:
     """
     Return a string representing the shell command and its arguments.
 

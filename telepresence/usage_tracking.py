@@ -15,15 +15,18 @@
 import json
 import os
 import platform
+from typing import Any, Dict, Union, Tuple, TypeVar
 from pathlib import Path
 from urllib import request
 from uuid import uuid4
 
-from telepresence import __version__
+from telepresence.runner import Runner
+from telepresence import __version__, cli, command_cli
 
+T = TypeVar('T')
 
 class Scout:
-    def __init__(self, app, version, install_id, **kwargs):
+    def __init__(self, app: str, version: str, install_id: str, **kwargs: Any) -> None:
         self.app = Scout.__not_blank("app", app)
         self.version = Scout.__not_blank("version", version)
         self.install_id = Scout.__not_blank("install_id", install_id)
@@ -36,7 +39,7 @@ class Scout:
                                    "1").lower() in {"1", "true", "yes"}
         self.disabled = Scout.__is_disabled()
 
-    def report(self, **kwargs):
+    def report(self, **kwargs: Any) -> Dict:
         result = {'latest_version': self.version}
 
         if self.disabled:
@@ -67,7 +70,7 @@ class Scout:
                 method="POST"
             )
             resp = request.urlopen(req)
-            if resp.code / 100 == 2:
+            if resp.getcode() / 100 == 2:
                 result = Scout.__merge_dicts(
                     result, json.loads(resp.read().decode("UTF-8"))
                 )
@@ -78,7 +81,7 @@ class Scout:
 
         return result
 
-    def create_user_agent(self):
+    def create_user_agent(self) -> str:
         result = "{0}/{1} ({2}; {3}; python {4})".format(
             self.app, self.version, platform.system(), platform.release(),
             platform.python_version()
@@ -87,7 +90,7 @@ class Scout:
         return result
 
     @staticmethod
-    def __not_blank(name, value):
+    def __not_blank(name: str, value: T) -> T:
         if value is None or str(value).strip() == "":
             raise ValueError(
                 "Value for '{}' is blank, empty or None".format(name)
@@ -96,20 +99,20 @@ class Scout:
         return value
 
     @staticmethod
-    def __merge_dicts(x, y):
+    def __merge_dicts(x: Dict, y: Dict) -> Dict:
         z = x.copy()
         z.update(y)
         return z
 
     @staticmethod
-    def __is_disabled():
+    def __is_disabled() -> bool:
         if str(os.getenv("TRAVIS_REPO_SLUG")).startswith("datawire/"):
             return True
 
         return os.getenv("SCOUT_DISABLE", "0").lower() in {"1", "true", "yes"}
 
 
-def get_numeric_version(version_str):
+def get_numeric_version(version_str: str) -> Tuple[int, ...]:
     res = []
     if "-" in version_str:
         version_str = version_str[:version_str.index("-")]
@@ -123,11 +126,12 @@ def get_numeric_version(version_str):
     return tuple(res)
 
 
-def call_scout(runner, args):
+def call_scout(runner: Runner, args: Union[cli.Args, command_cli.Args]) -> None:
     config_root = Path(Path.home() / ".config" / "telepresence")
     config_root.mkdir(parents=True, exist_ok=True)
     id_file = Path(config_root / "id")
 
+    assert runner.kubectl is not None
     scout_kwargs = dict(
         kubectl_version=runner.kubectl.kubectl_version,
         kubernetes_version=runner.kubectl.cluster_version,
@@ -162,7 +166,7 @@ def call_scout(runner, args):
             "https://www.telepresence.io/reference/changelog"
         ).format(scouted["latest_version"], __version__)
 
-        def ver_notice():
+        def ver_notice() -> None:
             runner.show(message)
 
         runner.add_cleanup("Show version notice", ver_notice)

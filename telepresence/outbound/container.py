@@ -17,7 +17,7 @@ import json
 import os
 import os.path
 from subprocess import CalledProcessError, Popen
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple, cast
 
 from telepresence import TELEPRESENCE_LOCAL_IMAGE
 from telepresence.cli import PortMapping
@@ -25,6 +25,7 @@ from telepresence.connect import SSH
 from telepresence.proxy import RemoteInfo
 from telepresence.runner import Runner
 from telepresence.utilities import find_free_port, random_name
+from telepresence.remote_env import PodInfo
 
 # Whether Docker requires sudo
 SUDO_FOR_DOCKER = os.path.exists("/var/run/docker.sock") and not os.access(
@@ -32,7 +33,7 @@ SUDO_FOR_DOCKER = os.path.exists("/var/run/docker.sock") and not os.access(
 )
 
 
-def docker_runify(args: List[str], env=False) -> List[str]:
+def docker_runify(args: List[str], env: bool=False) -> List[str]:
     """Prepend 'docker run' to a list of arguments."""
     args = ['docker', 'run'] + args
     if SUDO_FOR_DOCKER:
@@ -46,7 +47,7 @@ def docker_runify(args: List[str], env=False) -> List[str]:
 def make_docker_kill(runner: Runner, name: str) -> Callable:
     """Return a function that will kill a named docker container."""
 
-    def kill():
+    def kill() -> None:
         sudo = ["sudo"] if SUDO_FOR_DOCKER else []
         runner.check_call(sudo + ["docker", "stop", "--time=1", name])
 
@@ -97,7 +98,7 @@ def run_docker_command(
     remote_env: Dict[str, str],
     ssh: SSH,
     mount_dir: Optional[str],
-    pod_info: Dict[str, str],
+    pod_info: PodInfo,
 ) -> Popen:
     """
     --docker-run support.
@@ -131,9 +132,9 @@ def run_docker_command(
     }
     dns_args = []
     if "hostname" in pod_info:
-        dns_args.append("--hostname={}".format(pod_info["hostname"].strip()))
+        dns_args.append("--hostname={}".format(cast(str, pod_info["hostname"]).strip()))
     if "resolv" in pod_info:
-        dns_args.extend(parse_resolv_conf(pod_info["resolv"]))
+        dns_args.extend(parse_resolv_conf(cast(str, pod_info["resolv"])))
 
     # Image already has tini init so doesn't need --init option:
     span = runner.span()
@@ -219,7 +220,7 @@ def run_docker_command(
 
     process = Popen(docker_command, env=docker_env)
 
-    def terminate_if_alive():
+    def terminate_if_alive() -> None:
         runner.write("Shutting down containers...\n")
         if process.poll() is None:
             runner.write("Killing local container...\n")

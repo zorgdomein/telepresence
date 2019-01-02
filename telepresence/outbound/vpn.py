@@ -16,7 +16,7 @@ import ipaddress
 import json
 from socket import gethostbyname, gaierror
 from subprocess import CalledProcessError
-from typing import List
+from typing import List, Iterable
 
 from telepresence.connect import SSH
 from telepresence.proxy import RemoteInfo
@@ -31,7 +31,7 @@ def covering_cidr(ips: List[str]) -> str:
     Presumes it's at least a /24.
     """
 
-    def collapse(ns):
+    def collapse(ns: Iterable[ipaddress.IPv4Network]) -> List[ipaddress.IPv4Network]:
         return list(ipaddress.collapse_addresses(ns))
 
     assert len(ips) > 0
@@ -71,7 +71,7 @@ def get_proxy_cidrs(
     See https://github.com/kubernetes/kubernetes/issues/25533 for eventual
     long-term solution for service CIDR.
     """
-
+    assert runner.kubectl is not None
     span = runner.span()
 
     # Run script to convert --also-proxy hostnames to IPs, doing name
@@ -96,6 +96,7 @@ def k8s_resolve(
     using the context, namespace, and remote_info supplied. Note that
     if any hostname fails to resolve this will fail Telepresence.
     """
+    assert runner.kubectl is not None
     # Separate hostnames from IPs and IP ranges
     hostnames = []
     ip_ranges = []
@@ -119,7 +120,7 @@ def k8s_resolve(
 
     if hostnames:
         try:
-            resolved_ips = json.loads(
+            resolved_ips: List[str] = json.loads(
                 runner.get_output(
                     runner.kubectl(
                         "exec", "--container=" + remote_info.container_name,
@@ -146,10 +147,11 @@ def k8s_resolve(
     return resolved_ips + ip_ranges
 
 
-def podCIDRs(runner: Runner):
+def podCIDRs(runner: Runner) -> List[str]:
     """
     Get pod IPs from nodes if possible, otherwise use pod IPs as heuristic:
     """
+    assert runner.kubectl is not None
     cidrs = set()
     try:
         nodes = json.loads(
@@ -178,14 +180,17 @@ def podCIDRs(runner: Runner):
     return list(cidrs)
 
 
-def serviceCIDR(runner: Runner):
+def serviceCIDR(runner: Runner) -> str:
     """
     Get service IP range, based on heuristic of constructing CIDR from
     existing Service IPs. We create more services if there are less
     than 8, to ensure some coverage of the IP range.
     """
 
-    def get_service_ips():
+    assert runner.kubectl is not None
+
+    def get_service_ips() -> List:
+        assert runner.kubectl is not None
         services = json.loads(
             runner.get_output(runner.kubectl("get", "services", "-o", "json"))
         )["items"]
@@ -226,7 +231,7 @@ def serviceCIDR(runner: Runner):
 
 def connect_sshuttle(
     runner: Runner, remote_info: RemoteInfo, hosts_or_ips: List[str], ssh: SSH
-):
+) -> None:
     """Connect to Kubernetes using sshuttle."""
     span = runner.span()
     sshuttle_method = "auto"

@@ -13,9 +13,11 @@
 # limitations under the License.
 
 from subprocess import STDOUT, CalledProcessError
-from typing import Callable, Tuple
+from typing import Callable, Dict, Tuple, Union, Optional, cast
+from pathlib import Path
 
 from telepresence.connect import SSH
+from telepresence.cli import Args
 from telepresence.runner import Runner
 
 
@@ -69,10 +71,10 @@ def mount_remote_volumes(
             runner.show("\nMount error was: {}\n".format(exc.output.strip()))
         mounted = False
 
-    def no_cleanup():
+    def no_cleanup() -> None:
         pass
 
-    def cleanup():
+    def cleanup() -> None:
         if runner.platform == "linux":
             runner.check_call(
                 sudo_prefix + ["fusermount", "-z", "-u", mount_dir]
@@ -84,14 +86,15 @@ def mount_remote_volumes(
     return mount_dir, cleanup if mounted else no_cleanup
 
 
-def mount_remote(runner, mount, ssh, allow_all_users, env):
+def mount_remote(runner: Runner, mount: Union[bool, Path], ssh: SSH, allow_all_users: bool, env: Dict[str, str]) -> Optional[str]:
     """Handle filesystem stuff (pod name, ssh object)"""
     if mount:
         # The mount directory is made here, removed by mount_cleanup if
         # mount succeeds, leaked if mount fails.
         if mount is True:
-            mount_dir = str(runner.make_temp("fs"))
+            mount_dir: Optional[str] = str(runner.make_temp("fs"))
         else:
+            assert isinstance(mount, Path)
             # Try to create the mount point as a sanity check. If we do create
             # it, we leave it behind. This is sort of a leak. Kind of.
             # FIXME: Maybe warn if mount doesn't start with /tmp?
@@ -100,6 +103,7 @@ def mount_remote(runner, mount, ssh, allow_all_users, env):
             except OSError as exc:
                 raise runner.fail("Unable to use mount path: {}".format(exc))
             mount_dir = str(mount)
+        assert mount_dir is not None
         mount_dir, mount_cleanup = mount_remote_volumes(
             runner,
             ssh,
@@ -113,7 +117,7 @@ def mount_remote(runner, mount, ssh, allow_all_users, env):
     return mount_dir
 
 
-def setup(runner, args):
+def setup(runner: Runner, args: Args) -> Callable[[Runner, Dict[str,str], SSH], Optional[str]]:
     """
     Set up one of three mount_remote implementations:
     - Do nothing
@@ -130,7 +134,7 @@ def setup(runner, args):
 
     # We allow all users if we're using Docker because we don't know
     # what uid the Docker container will use.
-    allow_all_users = args.mount and args.method == "container"
+    allow_all_users = cast(bool, args.mount and args.method == "container")
     if allow_all_users:
         runner.require_sudo()
 
@@ -139,6 +143,9 @@ def setup(runner, args):
             "Volumes are rooted at $TELEPRESENCE_ROOT. See "
             "https://telepresence.io/howto/volumes.html for details."
         )
-    return lambda runner_, env, ssh: mount_remote(
-        runner_, args.mount, ssh, allow_all_users, env
-    )
+
+
+    def fn(runner_: Runner, env: Dict[str,str], ssh: SSH) -> Optional[str]:
+        return mount_remote(runner_, args.mount, ssh, allow_all_users, env)
+
+    return fn

@@ -15,7 +15,7 @@
 import json
 from copy import deepcopy
 from subprocess import STDOUT, CalledProcessError
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, List
 
 from telepresence.cli import PortMapping
 from telepresence.runner import Runner
@@ -31,6 +31,7 @@ def existing_deployment(
     """
     Handle an existing deployment by doing nothing
     """
+    assert runner.kubectl is not None
     try:
         runner.get_output(
             runner.kubectl("get", "deployment", deployment_arg),
@@ -54,10 +55,12 @@ def create_new_deployment(
     """
     Create a new Deployment, return its name and Kubernetes label.
     """
+    assert runner.kubectl is not None
     span = runner.span()
     run_id = runner.session_id
 
-    def remove_existing_deployment():
+    def remove_existing_deployment() -> None:
+        assert runner.kubectl is not None
         runner.get_output(
             runner.kubectl(
                 "delete",
@@ -103,22 +106,25 @@ def create_new_deployment(
     return deployment_arg, run_id
 
 
-def _split_deployment_container(deployment_arg):
-    deployment, *container = deployment_arg.split(":", 1)
-    if container:
-        container = container[0]
+def _split_deployment_container(deployment_arg: str) -> Tuple[str, Optional[str]]:
+    deployment, *_container = deployment_arg.split(":", 1)
+    if _container:
+        container: Optional[str] = _container[0]
+    else:
+        container = None
     return deployment, container
 
 
-def _get_container_name(container, deployment_json):
+def _get_container_name(container: Optional[str], deployment_json: Any) -> str:
     # If no container name was given, just use the first one:
     if not container:
         spec = deployment_json["spec"]["template"]["spec"]
         container = spec["containers"][0]["name"]
+        assert container is not None
     return container
 
 
-def _merge_expose_ports(expose, container_json):
+def _merge_expose_ports(expose: PortMapping, container_json: Any) -> None:
     expose.merge_automatic_ports([
         port["containerPort"] for port in container_json.get("ports", [])
         if port["protocol"] == "TCP"
@@ -137,6 +143,7 @@ def supplant_deployment(
     Returns (Deployment name, unique K8s label, JSON of original container that
     was swapped out.)
     """
+    assert runner.kubectl is not None
     span = runner.span()
     run_id = runner.session_id
 
@@ -166,8 +173,9 @@ def supplant_deployment(
     )
     new_deployment_json["metadata"]["name"] = new_deployment_name
 
-    def resize_original(replicas):
+    def resize_original(replicas: int) -> None:
         """Resize the original deployment (kubectl scale)"""
+        assert runner.kubectl is not None
         runner.check_call(
             runner.kubectl(
                 "scale", "deployment", deployment,
@@ -175,9 +183,10 @@ def supplant_deployment(
             )
         )
 
-    def delete_new_deployment(check):
+    def delete_new_deployment(check: bool) -> None:
         """Delete the new (copied) deployment"""
-        ignore = []
+        assert runner.kubectl is not None
+        ignore: List[str] = []
         if not check:
             ignore = ["--ignore-not-found"]
         runner.check_call(
@@ -305,6 +314,7 @@ def swap_deployment_openshift(
     current ReplicationController with one that uses the Telepresence image,
     then restores it. We delete the pods to force the RC to do its thing.
     """
+    assert runner.kubectl is not None
     run_id = runner.session_id
     deployment, container = _split_deployment_container(deployment_arg)
     rcs = runner.get_output(
@@ -323,7 +333,8 @@ def swap_deployment_openshift(
         )
     )
 
-    def apply_json(json_config):
+    def apply_json(json_config: Any) -> None:
+        assert runner.kubectl is not None
         runner.check_call(
             runner.kubectl("apply", "-f", "-"),
             input=json.dumps(json_config).encode("utf-8")

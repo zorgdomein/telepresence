@@ -16,16 +16,18 @@ Telepresence: local development environment for a remote Kubernetes cluster.
 """
 
 import sys
+import typing
 
 from telepresence import connect, intercept, mount, outbound, proxy, remote_env
-from telepresence.cli import crash_reporting, parse_args
+from telepresence.cli import Args, crash_reporting, parse_args
 from telepresence.command_cli import parse_args as command_parse_args
+from telepresence.command_cli import Args as CommandArgs
 from telepresence.runner import Runner
 from telepresence.startup import KubeInfo, final_checks
 from telepresence.usage_tracking import call_scout
 
 
-def main():
+def main() -> typing.NoReturn:
     """
     Top-level function for Telepresence
     """
@@ -36,12 +38,12 @@ def main():
 
     # Check for a subcommand
     with crash_reporting():
-        args = command_parse_args(None, only_for_commands=True)
-    if args is not None:
-        return command_main(args)
+        cmd_args: typing.Optional[CommandArgs] = command_parse_args(None, only_for_commands=True)
+    if cmd_args is not None:
+        command_main(cmd_args)
 
     with crash_reporting():
-        args = parse_args()  # tab-completion stuff goes here
+        args: Args = parse_args()  # tab-completion stuff goes here
 
         runner = Runner(args.logfile, None, args.verbose)
         span = runner.span()
@@ -87,7 +89,7 @@ def main():
         runner.wait_for_exit(user_process)
 
 
-def command_main(args):
+def command_main(args: CommandArgs) -> typing.NoReturn:
     """
     Top-level function for Telepresence when executing subcommands
     """
@@ -103,15 +105,15 @@ def command_main(args):
         call_scout(runner, args)
 
     if args.command == "outbound":
-        return outbound.command(runner)
+        outbound.command(runner)
 
     if args.command == "intercept":
-        return intercept.command(runner, args)
+        intercept.command(runner, args)
 
-    raise runner.fail("Not implemented!")
+    runner.fail("Not implemented!")
 
 
-def run_telepresence():
+def run_telepresence() -> typing.NoReturn:
     """Run telepresence"""
     if sys.version_info[:2] < (3, 5):
         raise SystemExit("Telepresence requires Python 3.5 or later.")

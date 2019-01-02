@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Callable
+
 from telepresence import (
-    TELEPRESENCE_REMOTE_IMAGE, TELEPRESENCE_REMOTE_IMAGE_PRIV
+    TELEPRESENCE_REMOTE_IMAGE, TELEPRESENCE_REMOTE_IMAGE_PRIV, cli
 )
 from .deployment import (
     existing_deployment, create_new_deployment, swap_deployment_openshift,
@@ -23,10 +25,11 @@ from .remote import RemoteInfo, get_remote_info
 from telepresence.runner import Runner
 
 
-def setup(runner: Runner, args):
+def setup(runner: Runner, args: cli.Args) -> Callable[[Runner], RemoteInfo]:
     """
     Determine how the user wants to set up the proxy in the cluster.
     """
+    assert runner.kubectl is not None
     deployment_type = "deployment"
     if runner.kubectl.command == "oc":
         # OpenShift Origin uses DeploymentConfig instead, but for swapping we
@@ -80,6 +83,7 @@ def setup(runner: Runner, args):
         )
 
     def start_proxy(runner_: Runner) -> RemoteInfo:
+        assert deployment_arg is not None
         tel_deployment, run_id = operation(
             runner_, deployment_arg, image_name, args.expose, add_custom_ns
         )

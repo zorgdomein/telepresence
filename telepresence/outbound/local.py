@@ -71,15 +71,16 @@ def set_up_torsocks(runner: Runner, socks_port: int) -> Dict[str, str]:
         span.end()
 
 
-def terminate_local_process(runner, process):
+def terminate_local_process(runner: Runner, process: Popen) -> None:
     if process.poll() is None:
         runner.write("Killing local process...")
         kill_process(process)
 
 
-def get_local_env(runner, env_overrides, replace_dns_tools):
+def get_local_env(runner: Runner, env_overrides: Dict[str,str], replace_dns_tools: bool) -> Dict[str,str]:
     env = os.environ.copy()
     env.update(env_overrides)
+    assert runner.kubectl is not None
     env["PROMPT_COMMAND"] = (
         'PS1="@{}|$PS1";unset PROMPT_COMMAND'.format(runner.kubectl.context)
     )

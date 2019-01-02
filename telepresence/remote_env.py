@@ -13,18 +13,21 @@
 # limitations under the License.
 
 from json import dump, loads
-from typing import Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple, Union
 
 from telepresence.connect import SSH
 from telepresence.proxy import RemoteInfo
 from telepresence.runner import Runner
+from telepresence import cli
 
+PodInfo = Dict[str, Union[str, Dict[str, str]]]
 
 def get_remote_env(runner: Runner, ssh: SSH, remote_info: RemoteInfo
-                   ) -> Tuple[Dict[str, str], Dict[str, Dict[str, str]]]:
+                   ) -> Tuple[Dict[str, str], PodInfo]:
     """
     Get the environment variables we want to copy from the remote pod
     """
+    assert runner.kubectl is not None
     span = runner.span()
     try:
         # Get the environment:
@@ -101,8 +104,11 @@ def write_env_json(runner: Runner, env: Dict[str, str], env_json: str) -> None:
         runner.show("Failed to write environment as JSON: {}".format(exc))
 
 
-def setup(_: Runner, args):
-    def write_env_files(runner_: Runner, env: Dict[str, str]):
+def setup(_: Runner, args: cli.Args) -> Tuple[
+        Callable[[Runner, SSH, RemoteInfo], Tuple[Dict[str,str],PodInfo]],
+        Callable[[Runner, Dict[str,str]], None]
+]:
+    def write_env_files(runner_: Runner, env: Dict[str, str]) -> None:
         if args.env_json:
             write_env_json(runner_, env, args.env_json)
         if args.env_file:

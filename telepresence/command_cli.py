@@ -15,11 +15,14 @@
 import argparse
 import sys
 from pathlib import Path
+from typing import Any, List, Optional
 
 import telepresence
 
+class Args(argparse.Namespace):
+    pass
 
-def parse_args(argv=None, only_for_commands=False):
+def parse_args(argv: Optional[List[str]]=None, only_for_commands: bool=False) -> Optional[Args]:
 
     prog = str(Path(sys.argv[0]).name)
     parser = argparse.ArgumentParser(
@@ -84,7 +87,7 @@ def parse_args(argv=None, only_for_commands=False):
     )
     available_commands = []
 
-    def add_command(name, *args, **kwargs):
+    def add_command(name: str, *args: Any, **kwargs: Any) -> argparse.ArgumentParser:
         available_commands.append(name)
         return subparsers.add_parser(name, *args, **kwargs)
 
@@ -157,8 +160,9 @@ def parse_args(argv=None, only_for_commands=False):
             return None
         show_warning_message = True
 
+    args = Args()
     try:
-        args = parser.parse_args(argv)
+        parser.parse_args(argv, namespace=args)
         show_warning_message = False
     finally:
         if show_warning_message:
@@ -174,7 +178,7 @@ def parse_args(argv=None, only_for_commands=False):
     return args
 
 
-def show_command_help_and_quit():
+def show_command_help_and_quit() -> None:
     parse_args(["--help"], only_for_commands=False)
 
 

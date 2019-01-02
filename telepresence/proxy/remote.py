@@ -14,7 +14,7 @@
 
 import json
 from subprocess import STDOUT, CalledProcessError
-from typing import Dict, Optional
+from typing import Dict, Optional, cast
 
 from telepresence import image_version
 from telepresence.runner import Runner
@@ -57,7 +57,7 @@ class RemoteInfo(object):
 
     def remote_telepresence_version(self) -> str:
         """Return the version used by the remote Telepresence container."""
-        name, version = self.container_config["image"].split(":")
+        name, version = cast(str, self.container_config["image"]).split(":")
         if name.endswith("telepresence-proxy"):
             return image_version
         return version
@@ -75,6 +75,7 @@ def get_deployment_json(
     the session id we set for the telepresence label. Otherwise run_id is None
     and the Deployment name must be used to locate the Deployment.
     """
+    assert runner.kubectl is not None
     span = runner.span()
     try:
         get_deployment = [
@@ -85,15 +86,16 @@ def get_deployment_json(
             "--export",
         ]
         if run_id is None:
-            return json.loads(
+            ret: Dict = json.loads(
                 runner.get_output(
                     runner.kubectl(get_deployment + [deployment_name]),
                     stderr=STDOUT
                 )
             )
+            return ret
         else:
             # When using a selector we get a list of objects, not just one:
-            return json.loads(
+            ret = json.loads(
                 runner.get_output(
                     runner.kubectl(
                         get_deployment + ["--selector=telepresence=" + run_id]
@@ -101,6 +103,7 @@ def get_deployment_json(
                     stderr=STDOUT
                 )
             )["items"][0]
+            return ret
     except CalledProcessError as e:
         raise runner.fail(
             "Failed to find deployment {}:\n{}".format(
@@ -113,6 +116,7 @@ def get_deployment_json(
 
 def wait_for_pod(runner: Runner, remote_info: RemoteInfo) -> None:
     """Wait for the pod to start running."""
+    assert runner.kubectl is not None
     span = runner.span()
     for _ in runner.loop_until(120, 0.25):
         try:
@@ -151,6 +155,7 @@ def get_remote_info(
     the session identifier we set for the telepresence label. Otherwise run_id
     is None and the Deployment name must be used to locate the Deployment.
     """
+    assert runner.kubectl is not None
     span = runner.span()
     deployment = get_deployment_json(
         runner, deployment_name, deployment_type, run_id=run_id

@@ -17,13 +17,14 @@ from subprocess import DEVNULL, Popen
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+from telepresence.command_cli import Args
 from telepresence.cli import PortMapping, crash_reporting
 from telepresence.connect import connect
 from telepresence.proxy import get_remote_info
 from telepresence.utilities import find_free_port
+from telepresence.runner import Runner
 
-
-def command(runner, args):
+def command(runner: Runner, args: Args) -> None:
     with runner.cleanup_handling(), crash_reporting(runner):
         # Process arguments
         name = args.name or runner.session_id
@@ -93,7 +94,7 @@ def command(runner, args):
         runner.wait_for_exit(user_process)
 
 
-def proxy_request(runner, url: str, data_str: str, method: str):
+def proxy_request(runner: Runner, url: str, data_str: str, method: str) -> str:
     runner.write("Proxy ({}) {} underway...".format(url, method))
     data = data_str.encode("utf-8")
     req = Request(url, method=method)

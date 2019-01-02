@@ -14,7 +14,7 @@
 
 from subprocess import DEVNULL, PIPE, Popen
 from threading import Thread
-
+from typing import Any, Callable, Dict, List, Optional, TextIO
 
 class BackgroundProcessCrash(Exception):
     def __init__(self, message: str, details: str) -> None:
@@ -22,20 +22,27 @@ class BackgroundProcessCrash(Exception):
         self.details = details
 
 
-def _launch_command(args, out_cb, err_cb, done=None, **kwargs):
+def _launch_command(
+        args: List[str],
+        out_cb: Callable[[Optional[str]],None],
+        err_cb: Callable[[Optional[str]],None],
+        done: Optional[Callable[[Popen],None]] = None,
+        **kwargs: Any
+) -> Popen:
     """
     Launch subprocess with args, kwargs.
     Log stdout and stderr by calling respective callbacks.
     """
 
-    def pump_stream(callback, stream):
+    def pump_stream(callback: Callable[[Optional[str]],None], stream: TextIO) -> None:
         """Pump the stream"""
         for line in stream:
             callback(line)
         callback(None)
 
-    def joiner():
+    def joiner() -> None:
         """Wait for streams to finish, then call done callback"""
+        assert done is not None  # mypy
         for th in threads:
             th.join()
         done(process)

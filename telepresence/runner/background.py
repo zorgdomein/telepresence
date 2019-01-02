@@ -14,7 +14,9 @@
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
+from typing import Any
 
+from .runner import Runner
 
 class DumbHandler(BaseHTTPRequestHandler):
     """
@@ -28,7 +30,7 @@ class DumbHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
 
-    def log_message(self, format: str, *args) -> None:
+    def log_message(self, format: str, *args: Any) -> None:
         """
         Make sure log messages go to the right place
         """
@@ -38,7 +40,7 @@ class DumbHandler(BaseHTTPRequestHandler):
         self.tel_output(message)
 
 
-def launch_local_server(runner, port: int) -> None:
+def launch_local_server(runner: Runner, port: int) -> None:
     """
     Make a dumb web server for the proxy pod to poll.
     """

@@ -19,23 +19,23 @@ from contextlib import contextmanager
 from pathlib import Path
 from subprocess import check_output
 from traceback import format_exc
-from typing import List, Set, Tuple, Union
+from typing import Callable, Dict, Iterator, List, Optional, Set, Sequence, Tuple, Union, cast
 from urllib.parse import quote_plus
 
 import telepresence
 from telepresence.command_cli import show_command_help_and_quit
-from telepresence.runner import BackgroundProcessCrash
+from telepresence.runner import BackgroundProcessCrash, Runner
 from telepresence.utilities import random_name
 
 
 class PortMapping(object):
     """Maps local ports to listen to remote exposed ports."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._mapping: Dict[int,int] = {}
 
     @classmethod
-    def parse(cls, port_strings: List[str]):
+    def parse(cls, port_strings: List[str]) -> 'PortMapping':
         """Parse list of 'port' or 'local_port:remote_port' to PortMapping."""
         result = PortMapping()
         for port_string in port_strings:
@@ -46,7 +46,7 @@ class PortMapping(object):
             result._mapping[local_port] = remote_port
         return result
 
-    def merge_automatic_ports(self, ports: List[int]):
+    def merge_automatic_ports(self, ports: List[int]) -> None:
         """
         Merge a list of ports to the existing ones.
 
@@ -79,7 +79,7 @@ def safe_output(args: List[str]) -> str:
         return "(error: {})".format(e)
 
 
-def report_crash(error, log_path, logs):
+def report_crash(error: str, log_path: str, logs: str) -> None:
     print(
         "\nLooks like there's a bug in our code. Sorry about that!\n\n" +
         error + "\n"
@@ -123,7 +123,7 @@ def report_crash(error, log_path, logs):
 
 
 @contextmanager
-def crash_reporting(runner=None):
+def crash_reporting(runner: Optional[Runner]=None) -> Iterator[None]:
     """
     Decorator that catches unexpected errors
     """
@@ -131,7 +131,7 @@ def crash_reporting(runner=None):
         yield
     except KeyboardInterrupt:
         if runner is not None:
-            show = runner.show
+            show: Callable[[str], None] = runner.show
         else:
             show = print
         show("Keyboard interrupt (Ctrl-C/Ctrl-Break) pressed")
@@ -168,7 +168,33 @@ def path_or_bool(value: str) -> Union[Path, bool]:
     )
 
 
-def parse_args(args=None) -> argparse.Namespace:
+class RawArgs(argparse.Namespace):
+    help_experimental: bool
+    verbose: bool
+    logfile: str
+    method: Optional[str]
+    new_deployment: Optional[str]
+    swap_deployment: Optional[str]
+    deployment: Optional[str]
+    context: Optional[str]
+    namespace: Optional[str]
+    expose: List[str]
+    also_proxy: List[str]
+    mount: Union[Path, bool]
+    env_json: Optional[str]
+    env_file: Optional[str]
+    run_shell: bool
+    run: Optional[List[str]]
+    docker_run: Optional[List[str]]
+
+
+class Args(RawArgs):
+    method: str
+    new_deployment: str
+    expose: PortMapping  # type: ignore
+
+
+def parse_args(argv: Optional[Sequence[str]]=None) -> Args:
     """Create a new ArgumentParser and parse sys.argv."""
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -361,14 +387,18 @@ def parse_args(args=None) -> argparse.Namespace:
             "Requires --method container."
         )
     )
-    args = parser.parse_args(args)
+
+    _args = namespace=RawArgs()
+    parser.parse_args(argv, namespace=_args)
 
     # Delegate subcommand help to the other parser
-    if args.help_experimental:
+    if _args.help_experimental:
         show_command_help_and_quit()
 
-    # Fill in defaults:
-    if args.method is None:
+
+    # Fill in defaults, convert types:
+    args = cast(Args, _args)
+    if _args.method is None:
         if args.docker_run is not None:
             args.method = "container"
         else:
@@ -378,6 +408,9 @@ def parse_args(args=None) -> argparse.Namespace:
     ):
         args.new_deployment = random_name()
 
+    args.expose = PortMapping.parse(_args.expose)
+
+    # Validate args
     if args.method == "container" and args.docker_run is None:
         raise SystemExit(
             "'--docker-run' is required when using '--method container'."
@@ -387,7 +420,6 @@ def parse_args(args=None) -> argparse.Namespace:
             "'--method container' is required when using '--docker-run'."
         )
 
-    args.expose = PortMapping.parse(args.expose)
     return args
 
 

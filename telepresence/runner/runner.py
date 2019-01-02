@@ -18,6 +18,7 @@ import signal
 import socket
 import sys
 import textwrap
+import types
 import typing
 import uuid
 from collections import deque
@@ -33,11 +34,13 @@ from time import sleep, time
 
 from telepresence import TELEPRESENCE_BINARY
 from telepresence.utilities import kill_process, str_command
-
 from .cache import Cache
 from .launch import BackgroundProcessCrash, _launch_command
 from .output import Output
 from .span import Span
+
+if typing.TYPE_CHECKING:
+    from telepresence.startup import KubeInfo
 
 class _CleanupItem(typing.NamedTuple):
     name: str
@@ -49,7 +52,12 @@ class _CleanupItem(typing.NamedTuple):
 class Runner(object):
     """Context for running subprocesses."""
 
-    def __init__(self, logfile_path: str, kubeinfo, verbose: bool) -> None:
+    def __init__(
+            self,
+            logfile_path: str,
+            kubeinfo: typing.Optional['KubeInfo'],
+            verbose: bool
+    ) -> None:
         """
         :param logfile_path: Path or string file path or "-" for stdout
         :param kubeinfo: How to run kubectl or equivalent
@@ -129,7 +137,7 @@ class Runner(object):
             path = "{}:{}".format(libexec, path)
         os.environ["PATH"] = path
 
-    def span(self, name: str = "", context=True, verbose=True) -> Span:
+    def span(self, name: str = "", context: bool=True, verbose: bool=True) -> Span:
         """Write caller's frame info to the log."""
 
         if context:
@@ -147,7 +155,7 @@ class Runner(object):
         s.begin()
         return s
 
-    def write(self, message: str, prefix="TEL") -> None:
+    def write(self, message: str, prefix: str="TEL") -> None:
         """Don't use this..."""
         return self.output.write(message, prefix)
 
@@ -287,27 +295,36 @@ class Runner(object):
 
     # Subprocesses
 
-    def _make_logger(self, track, capture=None):
+    def _make_logger(self, track: int, capture: typing.Optional[typing.MutableSequence[typing.Optional[str]]]=None) -> typing.Callable[[typing.Optional[str]],None]:
         """Create a logger that optionally captures what is logged"""
         prefix = "{:>3d}".format(track)
 
         if capture is None:
 
-            def logger(line):
+            def logger(line: typing.Optional[str]) -> None:
                 """Just log"""
                 if line is not None:
                     self.output.write(line, prefix=prefix)
         else:
 
-            def logger(line):
+            def logger(line: typing.Optional[str]) -> None:
                 """Log and capture"""
+                assert capture is not None  # mypy
                 capture.append(line)
                 if line is not None:
                     self.output.write(line, prefix=prefix)
 
         return logger
 
-    def _run_command(self, track, msg1, msg2, out_cb, err_cb, args, **kwargs):
+    def _run_command(self,
+                     track: int,
+                     msg1: str,
+                     msg2: str,
+                     out_cb: typing.Callable[[typing.Optional[str]],None],
+                     err_cb: typing.Callable[[typing.Optional[str]],None],
+                     args: typing.List[str],
+                     **kwargs: typing.Any
+    ) -> None:
         """Run a command synchronously"""
         self.output.write("[{}] {}: {}".format(track, msg1, str_command(args)))
         span = self.span(
@@ -332,7 +349,7 @@ class Runner(object):
                 "[{}] {} in {:0.2f} secs.".format(track, msg2, spent)
             )
 
-    def check_call(self, args, **kwargs):
+    def check_call(self, args: typing.List[str], **kwargs: typing.Any) -> None:
         """Run a subprocess, make sure it exited with 0."""
         self.counter = track = self.counter + 1
         out_cb = err_cb = self._make_logger(track)
@@ -340,10 +357,10 @@ class Runner(object):
             track, "Running", "ran", out_cb, err_cb, args, **kwargs
         )
 
-    def get_output(self, args, reveal=False, **kwargs) -> str:
+    def get_output(self, args: typing.List[str], reveal: bool=False, **kwargs: typing.Any) -> str:
         """Return (stripped) command result as unicode string."""
         self.counter = track = self.counter + 1
-        capture: typing.List[str] = []
+        capture: typing.List[typing.Optional[str]] = []
         if reveal or self.verbose:
             out_cb = self._make_logger(track, capture=capture)
         else:
@@ -369,7 +386,7 @@ class Runner(object):
         self,
         name: str,
         args: typing.List[str],
-        killer: typing.Callable[[], None] = None,
+        killer: typing.Optional[typing.Callable[[], None]] = None,
         notify: bool = False,
         keep_session: bool = False,
         bufsize: int = -1
@@ -401,10 +418,10 @@ class Runner(object):
 
         """
         self.counter = track = self.counter + 1
-        capture: typing.MutableSequence[str] = deque(maxlen=10)
+        capture: typing.MutableSequence[typing.Optional[str]] = deque(maxlen=10)
         out_cb = err_cb = self._make_logger(track, capture=capture)
 
-        def done(proc):
+        def done(proc: Popen) -> None:
             retcode = proc.wait()
             self.output.write("[{}] exit {}".format(track, retcode))
             self.quitting = True
@@ -429,7 +446,7 @@ class Runner(object):
             sock.bind(sockname)
             env["NOTIFY_SOCKET"] = sockname
 
-            def cleanup_socket():
+            def cleanup_socket() -> None:
                 sock.close()
                 sockdir.cleanup()
 
@@ -454,7 +471,7 @@ class Runner(object):
             raise
         self.add_cleanup(
             "Kill BG process [{}] {}".format(track, name),
-            killer if killer else partial(kill_process, process),
+            killer if killer else typing.cast(typing.Callable[[],None], partial(kill_process, process)),
         )
         if notify:
             # We need a select()able notification of death in case the
@@ -466,7 +483,7 @@ class Runner(object):
             # launched process, so what's the harm in one more?
             pr, pw = os.pipe()
 
-            def pipewait():
+            def pipewait() -> None:
                 process.wait()
                 os.close(pw)
 
@@ -485,7 +502,7 @@ class Runner(object):
 
     # Cleanup
 
-    def add_cleanup(self, name: str, callback, *args, **kwargs) -> None:
+    def add_cleanup(self, name: str, callback: typing.Callable, *args: typing.Any, **kwargs: typing.Any) -> None:
         """
         Set up callback to be called during cleanup processing on exit.
 
@@ -495,7 +512,7 @@ class Runner(object):
         cleanup_item = _CleanupItem(name, callback, args, kwargs)
         self.cleanup_stack.append(cleanup_item)
 
-    def _signal_received(self, sig_num, frame):
+    def _signal_received(self, sig_num: signal.Signals, frame: types.FrameType) -> None:
         try:
             sig_name = signal.Signals(sig_num).name
         except (ValueError, AttributeError):
@@ -511,7 +528,7 @@ class Runner(object):
         )
         self.exit()
 
-    def _do_cleanup(self):
+    def _do_cleanup(self) -> typing.List[typing.Tuple[str,BaseException]]:
         failures = []
         self.show("Exit cleanup in progress")
         for name, callback, args, kwargs in reversed(self.cleanup_stack):
@@ -525,7 +542,7 @@ class Runner(object):
         return failures
 
     @contextmanager
-    def cleanup_handling(self):
+    def cleanup_handling(self) -> typing.Iterator[None]:
         signal.signal(signal.SIGTERM, self._signal_received)
         signal.signal(signal.SIGHUP, self._signal_received)
         try:
@@ -547,7 +564,7 @@ class Runner(object):
         failures = "\n\n".join(self.ended)
         raise BackgroundProcessCrash(message, failures)
 
-    def fail(self, message: str, code=1) -> typing.NoReturn:
+    def fail(self, message: str, code: int=1) -> typing.NoReturn:
         """
         Report failure to the user and exit. Does not return. Cleanup will run
         before the process ends. This does not invoke the crash reporter; an
@@ -573,7 +590,7 @@ class Runner(object):
         self.write("EXITING successful session.")
         exit(0)
 
-    def wait_for_exit(self, main_process: Popen) -> None:
+    def wait_for_exit(self, main_process: Popen) -> typing.NoReturn:
         """
         Monitor main process and background items until done
         """
@@ -592,16 +609,16 @@ class Runner(object):
             self.write("Main process ({})".format(main_command))
             self.write(" exited with code {}.".format(main_code))
             raise self.exit()
-
-        # Something else exited, setting the quitting flag.
-        # Unfortunately torsocks doesn't deal well with connections
-        # being lost, so best we can do is shut down.
-        if self.ended:
+        else:
+            # Something else exited, setting the quitting flag.
+            # Unfortunately torsocks doesn't deal well with connections
+            # being lost, so best we can do is shut down.
+            if self.ended:
+                self.show("\n")
+                self.show_raw(self.ended[0])
             self.show("\n")
-            self.show_raw(self.ended[0])
-        self.show("\n")
-        message = (
-            "Proxy to Kubernetes exited. This is typically due to"
-            " a lost connection."
-        )
-        raise self.fail(message, code=3)
+            message = (
+                "Proxy to Kubernetes exited. This is typically due to"
+                " a lost connection."
+            )
+            raise self.fail(message, code=3)

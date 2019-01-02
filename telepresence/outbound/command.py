@@ -14,11 +14,13 @@
 
 from subprocess import DEVNULL, Popen
 from urllib.request import urlopen
+from typing import NoReturn
 
 from telepresence.cli import crash_reporting
+from telepresence.runner import Runner
 
 
-def kill_intercept():
+def kill_intercept() -> None:
     try:
         with urlopen("http://teleproxy/api/shutdown", timeout=2.0) as fd:
             fd.read()
@@ -26,7 +28,8 @@ def kill_intercept():
         pass
 
 
-def command(runner):
+def command(runner: Runner) -> NoReturn:
+    assert runner.kubectl is not None
     with runner.cleanup_handling(), crash_reporting(runner):
         runner.require_sudo()
         runner.show("Setting up outbound connectivity...")

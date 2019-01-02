@@ -18,11 +18,12 @@ import ssl
 import sys
 from shutil import which
 from subprocess import STDOUT, CalledProcessError
-from typing import List, Tuple
+from typing import List, Tuple, Union, cast
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
 from telepresence.runner import Runner
+from telepresence import command_cli, cli
 
 
 def kubectl_or_oc(server: str) -> str:
@@ -67,7 +68,7 @@ def _parse_version(version: str) -> Tuple[int, int, int]:
 class KubeInfo(object):
     """Record the local machine Kubernetes configuration"""
 
-    def __init__(self, runner: Runner, args) -> None:
+    def __init__(self, runner: Runner, args: Union[command_cli.Args, cli.Args]) -> None:
         span = runner.span()
         # We don't quite know yet if we want kubectl or oc (if someone has both
         # it depends on the context), so until we know the context just guess.
@@ -173,14 +174,14 @@ class KubeInfo(object):
 
         span.end()
 
-    def __call__(self, *in_args) -> List[str]:
+    def __call__(self, *in_args: Union[List[str], str]) -> List[str]:
         """Return command-line for running kubectl."""
         # Allow kubectl(arg1, arg2, arg3) or kubectl(*args) but also allow
         # kubectl(args) for convenience.
         if len(in_args) == 1 and type(in_args[0]) is not str:
-            args = in_args[0]
+            args = cast(List[List[str]], in_args)[0]
         else:
-            args = in_args
+            args = cast(List[str], in_args)
         result = [self.command]
         if self.verbose:
             result.append("--v=4")
@@ -238,11 +239,11 @@ class KubeInfo(object):
             runner.write(warning_message)
 
 
-def final_checks(runner: Runner, args):
+def final_checks(runner: Runner, args: cli.Args) -> None:
     """
     Perform some last cross-cutting checks
     """
-
+    assert runner.kubectl is not None
     # Make sure we can access Kubernetes:
     try:
         runner.get_output(
