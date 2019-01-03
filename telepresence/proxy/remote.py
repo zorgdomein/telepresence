@@ -14,7 +14,7 @@
 
 import json
 from subprocess import STDOUT, CalledProcessError
-from typing import Dict, Optional, cast
+from typing import Any, Dict, Optional, cast
 
 from telepresence import image_version
 from telepresence.runner import Runner
@@ -38,7 +38,7 @@ class RemoteInfo(object):
         runner: Runner,
         deployment_name: str,
         pod_name: str,
-        deployment_config: dict,
+        deployment_config: Dict[Any,Any],
     ) -> None:
         self.deployment_name = deployment_name
         self.pod_name = pod_name
@@ -52,7 +52,7 @@ class RemoteInfo(object):
                 "Could not find container with image "
                 "'datawire/telepresence-k8s' in pod {}.".format(pod_name)
             )
-        self.container_config: Dict = containers[0]
+        self.container_config: Dict[Any,Any] = containers[0]
         self.container_name: str = self.container_config["name"]
 
     def remote_telepresence_version(self) -> str:
@@ -68,7 +68,7 @@ def get_deployment_json(
     deployment_name: str,
     deployment_type: str,
     run_id: Optional[str] = None,
-) -> Dict:
+) -> Dict[Any, Any]:
     """Get the decoded JSON for a deployment.
 
     If this is a Deployment we created, the run_id is also passed in - this is
@@ -85,7 +85,7 @@ def get_deployment_json(
             "--export",
         ]
         if run_id is None:
-            ret: Dict = json.loads(
+            ret: Dict[Any, Any] = json.loads(
                 runner.get_output(
                     runner.kubectl(get_deployment + [deployment_name]),
                     stderr=STDOUT

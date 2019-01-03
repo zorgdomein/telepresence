@@ -14,7 +14,7 @@
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
-from typing import Any
+from typing import Any, Callable
 
 from .runner import Runner
 
@@ -24,7 +24,8 @@ class DumbHandler(BaseHTTPRequestHandler):
     HTTP handler that returns success for any HEAD request
     """
 
-    tel_output = print
+    def __init__(self) -> None:
+        self.tel_output: Callable[[str], None] = print
 
     def do_HEAD(self) -> None:
         "Handle head"

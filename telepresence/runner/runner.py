@@ -21,7 +21,6 @@ import textwrap
 import types
 import typing
 import uuid
-from collections import deque
 from contextlib import contextmanager
 from functools import partial
 from inspect import currentframe, getframeinfo
@@ -47,8 +46,8 @@ if typing.TYPE_CHECKING:
 
 class _CleanupItem(typing.NamedTuple):
     name: str
-    callable: typing.Callable
-    args: typing.Tuple
+    callable: typing.Callable[..., typing.Any]
+    args: typing.Tuple[typing.Any, ...]
     kwargs: typing.Dict[str, typing.Any]
 
 
@@ -56,11 +55,9 @@ class Runner(object):
     """Context for running subprocesses."""
 
     def __init__(
-        self, args: typing.Union['command_cli.Args', 'cli.Args']
+        self, logfile_path: str, verbose: bool,
+        args: 'typing.Union[None, command_cli.Args, cli.Args]'
     ) -> None:
-        logfile_path = args.logfile
-        verbose = args.verbose
-
         self.output = Output(logfile_path)
         self.logfile_path = self.output.logfile_path
         self.verbose = verbose
@@ -134,7 +131,14 @@ class Runner(object):
             path = "{}:{}".format(libexec, path)
         os.environ["PATH"] = path
 
-        self.kubectl = KubeInfo(self, args)
+        if args is None:
+            self.kubectl = self._kubectl
+        else:
+            self.kubectl = KubeInfo(self, args)
+
+    def _kubectl(self, *in_args: typing.Union[typing.List[str], str]
+                 ) -> typing.List[str]:
+        assert False
 
     def span(
         self, name: str = "", context: bool = True, verbose: bool = True
@@ -426,8 +430,7 @@ class Runner(object):
 
         """
         self.counter = track = self.counter + 1
-        capture: typing.MutableSequence[typing.Optional[str]
-                                        ] = deque(maxlen=10)
+        capture = typing.Deque[typing.Optional[str]](maxlen=10)
         out_cb = err_cb = self._make_logger(track, capture=capture)
 
         def done(proc: Popen) -> None:
@@ -513,7 +516,7 @@ class Runner(object):
     # Cleanup
 
     def add_cleanup(
-        self, name: str, callback: typing.Callable, *args: typing.Any,
+        self, name: str, callback: typing.Callable[..., typing.Any], *args: typing.Any,
         **kwargs: typing.Any
     ) -> None:
         """

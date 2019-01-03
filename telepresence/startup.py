@@ -70,7 +70,7 @@ class KubeInfo(object):
     """Record the local machine Kubernetes configuration"""
 
     def __init__(
-        self, runner: 'Runner', args: Union['command_cli.Args', 'cli.Args']
+        self, runner: 'Runner', args: 'Union[command_cli.Args, cli.Args]'
     ) -> None:
         span = runner.span()
         # We don't quite know yet if we want kubectl or oc (if someone has both

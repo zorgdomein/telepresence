@@ -14,10 +14,9 @@
 
 import os
 import sys
-from collections import deque
 from time import ctime
 from time import time as curtime
-from typing import TextIO
+from typing import TextIO, Deque
 
 from telepresence import __version__, image_version, version_override
 from telepresence.utilities import str_command
@@ -60,7 +59,7 @@ class Output(object):
         self.logfile_path = logfile_path
 
         self.start_time = curtime()
-        self.logtail: deque = deque(maxlen=25)  # keep last 25 lines
+        self.logtail = Deque[str](maxlen=25)  # keep last 25 lines
 
         self.write(
             "Telepresence {} launched at {}".format(__version__, ctime())

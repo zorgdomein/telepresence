@@ -23,7 +23,7 @@ from telepresence.cli import Args, crash_reporting, parse_args
 from telepresence.command_cli import parse_args as command_parse_args
 from telepresence.command_cli import Args as CommandArgs
 from telepresence.runner import Runner
-from telepresence.startup import KubeInfo, final_checks
+from telepresence.startup import final_checks
 from telepresence.usage_tracking import call_scout
 
 
@@ -47,7 +47,7 @@ def main() -> typing.NoReturn:
     with crash_reporting():
         args: Args = parse_args()  # tab-completion stuff goes here
 
-        runner = Runner(args)
+        runner = Runner(args.logfile, args.verbose, args)
         span = runner.span()
         runner.add_cleanup("Stop time tracking", span.end)
 
@@ -96,7 +96,7 @@ def command_main(args: CommandArgs) -> typing.NoReturn:
     """
 
     with crash_reporting():
-        runner = Runner(args)
+        runner = Runner(args.logfile, args.verbose, args)
         span = runner.span()
 
         runner.add_cleanup("Stop time tracking", span.end)

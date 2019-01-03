@@ -212,12 +212,12 @@ def supplant_deployment(
 
 
 def new_swapped_deployment(
-    old_deployment: Dict,
+    old_deployment: Dict[Any, Any],
     container_to_update: str,
     run_id: str,
     telepresence_image: str,
     add_custom_nameserver: bool,
-) -> Tuple[Dict, Dict]:
+) -> Tuple[Dict[Any,Any], Dict[Any,Any]]:
     """
     Create a new Deployment that uses telepresence-k8s image.
 

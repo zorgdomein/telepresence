@@ -37,7 +37,7 @@ import periodic
 NAMESPACE_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
 
 
-def listen(client):
+def listen(client: resolver.LocalResolver) -> None:
     reactor.listenTCP(9050, socks.SOCKSv5Factory())
     factory = server.DNSServerFactory(clients=[client])
     protocol = dns.DNSDatagramProtocol(controller=factory)
@@ -45,7 +45,7 @@ def listen(client):
     reactor.listenUDP(9053, protocol)
 
 
-def main():
+def main() -> None:
     predefined_namespace = os.getenv('TELEPRESENCE_CONTAINER_NAMESPACE', None)
     if predefined_namespace:
         NAMESPACE = predefined_namespace

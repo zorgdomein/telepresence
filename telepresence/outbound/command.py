@@ -18,6 +18,7 @@ from typing import NoReturn
 
 from telepresence.cli import crash_reporting
 from telepresence.runner import Runner
+from telepresence.startup import KubeInfo
 
 
 def kill_intercept() -> None:
@@ -42,6 +43,7 @@ def command(runner: Runner) -> NoReturn:
             keep_session=True,  # Avoid trouble with interactive sudo
             notify=True,
         )
+        assert isinstance(runner.kubectl, KubeInfo)
         runner.launch(
             "teleproxy bridge",
             [

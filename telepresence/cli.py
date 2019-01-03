@@ -19,7 +19,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from subprocess import check_output
 from traceback import format_exc
-from typing import Callable, Dict, Iterator, List, Optional, Set, Sequence, Tuple, Union, cast
+from typing import (
+    Callable, Dict, Iterator, List, Optional, Sequence, Set, Tuple, Union, cast
+)
 from urllib.parse import quote_plus
 
 import telepresence
@@ -388,7 +390,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> Args:
         )
     )
 
-    _args = namespace = RawArgs()
+    _args = RawArgs()
     parser.parse_args(argv, namespace=_args)
 
     # Delegate subcommand help to the other parser

@@ -21,9 +21,12 @@ from urllib import request
 from uuid import uuid4
 
 from telepresence.runner import Runner
+from telepresence.startup import KubeInfo
 from telepresence import __version__, cli, command_cli
 
 T = TypeVar('T')
+K = TypeVar('K')
+V = TypeVar('V')
 
 
 class Scout:
@@ -42,7 +45,7 @@ class Scout:
                                    "1").lower() in {"1", "true", "yes"}
         self.disabled = Scout.__is_disabled()
 
-    def report(self, **kwargs: Any) -> Dict:
+    def report(self, **kwargs: Any) -> Dict[str, Any]:
         result = {'latest_version': self.version}
 
         if self.disabled:
@@ -102,7 +105,7 @@ class Scout:
         return value
 
     @staticmethod
-    def __merge_dicts(x: Dict, y: Dict) -> Dict:
+    def __merge_dicts(x: Dict[K,V], y: Dict[K,V]) -> Dict[K,V]:
         z = x.copy()
         z.update(y)
         return z
@@ -136,6 +139,7 @@ def call_scout(
     config_root.mkdir(parents=True, exist_ok=True)
     id_file = Path(config_root / "id")
 
+    assert isinstance(runner.kubectl, KubeInfo)
     scout_kwargs = dict(
         kubectl_version=runner.kubectl.kubectl_version,
         kubernetes_version=runner.kubectl.cluster_version,

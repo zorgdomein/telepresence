@@ -48,6 +48,7 @@ When the process exits with exit code 100 that means the proxy is active.
 """
 
 import sys
+import typing
 from json import loads
 from subprocess import Popen
 from socket import gethostbyname, gaierror
@@ -58,7 +59,7 @@ from telepresence.connect.ssh import SSH
 from telepresence.runner import Runner
 
 
-def main():
+def main() -> None:
     """Dispatch to the correct mode"""
     command = sys.argv[1]
     if command == "proxy":
@@ -67,13 +68,13 @@ def main():
         wait()
 
 
-def proxy(config: dict):
+def proxy(config: dict) -> typing.NoReturn:
     """Start sshuttle proxy to Kubernetes."""
     cidrs = config["cidrs"]
     expose_ports = config["expose_ports"]
 
     # Launch local sshd so Tel outside can forward 38023 to the cluster
-    runner = Runner("-", "-", False)
+    runner = Runner("-", False, None)
     runner.check_call(["/usr/sbin/sshd", "-e"])
 
     # Wait for the cluster to be available
@@ -113,7 +114,7 @@ def proxy(config: dict):
     runner.wait_for_exit(main_process)
 
 
-def wait():
+def wait() -> typing.NoReturn:
     """Wait for proxying to be live."""
     start = time()
     while time() - start < 30:

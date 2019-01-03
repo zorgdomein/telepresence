@@ -31,7 +31,7 @@ import os
 import re
 import subprocess
 import sys
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, cast
 
 
 def get_keywords() -> Dict[str, str]:
@@ -172,7 +172,7 @@ def versions_from_parentdir(parentdir_prefix: str, root: str,
 
 
 @register_vcs_handler("git", "get_keywords")
-def git_get_keywords(versionfile_abs: str) -> Dict:
+def git_get_keywords(versionfile_abs: str) -> Dict[str,str]:
     """Extract version information from the given file."""
     # the code embedded in _version.py can just fetch the value of these
     # keywords. When used from setup.py, we don't want to import _version.py,
@@ -202,8 +202,8 @@ def git_get_keywords(versionfile_abs: str) -> Dict:
 
 @register_vcs_handler("git", "keywords")
 def git_versions_from_keywords(
-    keywords: Dict, tag_prefix: str, verbose: bool
-) -> Dict:
+    keywords: Dict[str,str], tag_prefix: str, verbose: bool
+) -> Dict[str,Any]:
     """Get version information from git keywords."""
     if not keywords:
         raise NotThisMethod("no keywords at all, weird")

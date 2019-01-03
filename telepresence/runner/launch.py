@@ -14,7 +14,7 @@
 
 from subprocess import DEVNULL, PIPE, Popen
 from threading import Thread
-from typing import Any, Callable, Dict, List, Optional, TextIO
+from typing import Any, Callable, List, Optional, TextIO
 
 
 class BackgroundProcessCrash(Exception):
