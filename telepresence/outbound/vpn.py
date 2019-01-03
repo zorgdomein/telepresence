@@ -71,7 +71,6 @@ def get_proxy_cidrs(
     See https://github.com/kubernetes/kubernetes/issues/25533 for eventual
     long-term solution for service CIDR.
     """
-    assert runner.kubectl is not None
     span = runner.span()
 
     # Run script to convert --also-proxy hostnames to IPs, doing name
@@ -96,7 +95,6 @@ def k8s_resolve(
     using the context, namespace, and remote_info supplied. Note that
     if any hostname fails to resolve this will fail Telepresence.
     """
-    assert runner.kubectl is not None
     # Separate hostnames from IPs and IP ranges
     hostnames = []
     ip_ranges = []
@@ -151,7 +149,6 @@ def podCIDRs(runner: Runner) -> List[str]:
     """
     Get pod IPs from nodes if possible, otherwise use pod IPs as heuristic:
     """
-    assert runner.kubectl is not None
     cidrs = set()
     try:
         nodes = json.loads(
@@ -187,10 +184,8 @@ def serviceCIDR(runner: Runner) -> str:
     than 8, to ensure some coverage of the IP range.
     """
 
-    assert runner.kubectl is not None
 
     def get_service_ips() -> List:
-        assert runner.kubectl is not None
         services = json.loads(
             runner.get_output(runner.kubectl("get", "services", "-o", "json"))
         )["items"]

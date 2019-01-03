@@ -18,13 +18,14 @@ import ssl
 import sys
 from shutil import which
 from subprocess import STDOUT, CalledProcessError
-from typing import List, Tuple, Union, cast
+from typing import List, Tuple, Union, cast, TYPE_CHECKING
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
-from telepresence.runner import Runner
-from telepresence import command_cli, cli
 
+if TYPE_CHECKING:
+    from telepresence import command_cli, cli
+    from telepresence.runner import Runner
 
 def kubectl_or_oc(server: str) -> str:
     """
@@ -68,7 +69,7 @@ def _parse_version(version: str) -> Tuple[int, int, int]:
 class KubeInfo(object):
     """Record the local machine Kubernetes configuration"""
 
-    def __init__(self, runner: Runner, args: Union[command_cli.Args, cli.Args]) -> None:
+    def __init__(self, runner: 'Runner', args: Union['command_cli.Args', 'cli.Args']) -> None:
         span = runner.span()
         # We don't quite know yet if we want kubectl or oc (if someone has both
         # it depends on the context), so until we know the context just guess.
@@ -190,7 +191,7 @@ class KubeInfo(object):
         result += args
         return result
 
-    def _check_if_in_local_vm(self, runner: Runner) -> bool:
+    def _check_if_in_local_vm(self, runner: 'Runner') -> bool:
         # Minikube just has 'minikube' as context'
         if self.context == "minikube":
             return True
@@ -204,7 +205,7 @@ class KubeInfo(object):
                 return True
         return False
 
-    def _check_versions(self, runner: Runner) -> None:
+    def _check_versions(self, runner: 'Runner') -> None:
         try:
             cluster = _parse_version(self.cluster_version)
         except ValueError:
@@ -239,11 +240,10 @@ class KubeInfo(object):
             runner.write(warning_message)
 
 
-def final_checks(runner: Runner, args: cli.Args) -> None:
+def final_checks(runner: 'Runner', args: 'cli.Args') -> None:
     """
     Perform some last cross-cutting checks
     """
-    assert runner.kubectl is not None
     # Make sure we can access Kubernetes:
     try:
         runner.get_output(

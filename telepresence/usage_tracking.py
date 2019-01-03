@@ -131,7 +131,6 @@ def call_scout(runner: Runner, args: Union[cli.Args, command_cli.Args]) -> None:
     config_root.mkdir(parents=True, exist_ok=True)
     id_file = Path(config_root / "id")
 
-    assert runner.kubectl is not None
     scout_kwargs = dict(
         kubectl_version=runner.kubectl.kubectl_version,
         kubernetes_version=runner.kubectl.cluster_version,

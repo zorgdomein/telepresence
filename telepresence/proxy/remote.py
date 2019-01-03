@@ -75,7 +75,6 @@ def get_deployment_json(
     the session id we set for the telepresence label. Otherwise run_id is None
     and the Deployment name must be used to locate the Deployment.
     """
-    assert runner.kubectl is not None
     span = runner.span()
     try:
         get_deployment = [
@@ -116,7 +115,6 @@ def get_deployment_json(
 
 def wait_for_pod(runner: Runner, remote_info: RemoteInfo) -> None:
     """Wait for the pod to start running."""
-    assert runner.kubectl is not None
     span = runner.span()
     for _ in runner.loop_until(120, 0.25):
         try:
@@ -155,7 +153,6 @@ def get_remote_info(
     the session identifier we set for the telepresence label. Otherwise run_id
     is None and the Deployment name must be used to locate the Deployment.
     """
-    assert runner.kubectl is not None
     span = runner.span()
     deployment = get_deployment_json(
         runner, deployment_name, deployment_type, run_id=run_id

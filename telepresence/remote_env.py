@@ -27,7 +27,6 @@ def get_remote_env(runner: Runner, ssh: SSH, remote_info: RemoteInfo
     """
     Get the environment variables we want to copy from the remote pod
     """
-    assert runner.kubectl is not None
     span = runner.span()
     try:
         # Get the environment:

@@ -45,10 +45,9 @@ def main() -> typing.NoReturn:
     with crash_reporting():
         args: Args = parse_args()  # tab-completion stuff goes here
 
-        runner = Runner(args.logfile, None, args.verbose)
+        runner = Runner(args)
         span = runner.span()
         runner.add_cleanup("Stop time tracking", span.end)
-        runner.kubectl = KubeInfo(runner, args)
 
         start_proxy = proxy.setup(runner, args)
         do_connect = connect.setup(runner, args)
@@ -95,10 +94,10 @@ def command_main(args: CommandArgs) -> typing.NoReturn:
     """
 
     with crash_reporting():
-        runner = Runner(args.logfile, None, args.verbose)
+        runner = Runner(args)
         span = runner.span()
+
         runner.add_cleanup("Stop time tracking", span.end)
-        runner.kubectl = KubeInfo(runner, args)
 
         args.operation = args.command
         args.method = "teleproxy"

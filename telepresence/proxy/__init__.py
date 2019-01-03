@@ -29,7 +29,6 @@ def setup(runner: Runner, args: cli.Args) -> Callable[[Runner], RemoteInfo]:
     """
     Determine how the user wants to set up the proxy in the cluster.
     """
-    assert runner.kubectl is not None
     deployment_type = "deployment"
     if runner.kubectl.command == "oc":
         # OpenShift Origin uses DeploymentConfig instead, but for swapping we

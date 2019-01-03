@@ -29,7 +29,6 @@ def kill_intercept() -> None:
 
 
 def command(runner: Runner) -> NoReturn:
-    assert runner.kubectl is not None
     with runner.cleanup_handling(), crash_reporting(runner):
         runner.require_sudo()
         runner.show("Setting up outbound connectivity...")

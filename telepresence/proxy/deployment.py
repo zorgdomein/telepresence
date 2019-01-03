@@ -31,7 +31,6 @@ def existing_deployment(
     """
     Handle an existing deployment by doing nothing
     """
-    assert runner.kubectl is not None
     try:
         runner.get_output(
             runner.kubectl("get", "deployment", deployment_arg),
@@ -55,12 +54,10 @@ def create_new_deployment(
     """
     Create a new Deployment, return its name and Kubernetes label.
     """
-    assert runner.kubectl is not None
     span = runner.span()
     run_id = runner.session_id
 
     def remove_existing_deployment() -> None:
-        assert runner.kubectl is not None
         runner.get_output(
             runner.kubectl(
                 "delete",
@@ -143,7 +140,6 @@ def supplant_deployment(
     Returns (Deployment name, unique K8s label, JSON of original container that
     was swapped out.)
     """
-    assert runner.kubectl is not None
     span = runner.span()
     run_id = runner.session_id
 
@@ -175,7 +171,6 @@ def supplant_deployment(
 
     def resize_original(replicas: int) -> None:
         """Resize the original deployment (kubectl scale)"""
-        assert runner.kubectl is not None
         runner.check_call(
             runner.kubectl(
                 "scale", "deployment", deployment,
@@ -185,7 +180,6 @@ def supplant_deployment(
 
     def delete_new_deployment(check: bool) -> None:
         """Delete the new (copied) deployment"""
-        assert runner.kubectl is not None
         ignore: List[str] = []
         if not check:
             ignore = ["--ignore-not-found"]
@@ -314,7 +308,6 @@ def swap_deployment_openshift(
     current ReplicationController with one that uses the Telepresence image,
     then restores it. We delete the pods to force the RC to do its thing.
     """
-    assert runner.kubectl is not None
     run_id = runner.session_id
     deployment, container = _split_deployment_container(deployment_arg)
     rcs = runner.get_output(
@@ -334,7 +327,6 @@ def swap_deployment_openshift(
     )
 
     def apply_json(json_config: Any) -> None:
-        assert runner.kubectl is not None
         runner.check_call(
             runner.kubectl("apply", "-f", "-"),
             input=json.dumps(json_config).encode("utf-8")

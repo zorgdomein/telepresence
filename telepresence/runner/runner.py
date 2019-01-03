@@ -34,13 +34,15 @@ from time import sleep, time
 
 from telepresence import TELEPRESENCE_BINARY
 from telepresence.utilities import kill_process, str_command
+from telepresence.startup import KubeInfo
+
 from .cache import Cache
 from .launch import BackgroundProcessCrash, _launch_command
 from .output import Output
 from .span import Span
 
 if typing.TYPE_CHECKING:
-    from telepresence.startup import KubeInfo
+    from telepresence import command_cli, cli
 
 class _CleanupItem(typing.NamedTuple):
     name: str
@@ -54,18 +56,13 @@ class Runner(object):
 
     def __init__(
             self,
-            logfile_path: str,
-            kubeinfo: typing.Optional['KubeInfo'],
-            verbose: bool
+            args: typing.Union['command_cli.Args', 'cli.Args']
     ) -> None:
-        """
-        :param logfile_path: Path or string file path or "-" for stdout
-        :param kubeinfo: How to run kubectl or equivalent
-        :param verbose: Whether subcommand should run in verbose mode.
-        """
+        logfile_path = args.logfile
+        verbose = args.verbose
+
         self.output = Output(logfile_path)
         self.logfile_path = self.output.logfile_path
-        self.kubectl = kubeinfo
         self.verbose = verbose
         self.start_time = time()
         self.current_span: typing.Optional[Span] = None
@@ -136,6 +133,8 @@ class Runner(object):
         if libexec.exists():
             path = "{}:{}".format(libexec, path)
         os.environ["PATH"] = path
+
+        self.kubectl = KubeInfo(self, args)
 
     def span(self, name: str = "", context: bool=True, verbose: bool=True) -> Span:
         """Write caller's frame info to the log."""

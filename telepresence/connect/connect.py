@@ -33,7 +33,6 @@ def connect(
 
     Return (local port of SOCKS proxying tunnel, SSH instance).
     """
-    assert runner.kubectl is not None
     span = runner.span()
     # Keep local copy of pod logs, for debugging purposes:
     runner.launch(
