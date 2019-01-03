@@ -38,7 +38,7 @@ class RemoteInfo(object):
         runner: Runner,
         deployment_name: str,
         pod_name: str,
-        deployment_config: Dict[Any,Any],
+        deployment_config: Dict[Any, Any],
     ) -> None:
         self.deployment_name = deployment_name
         self.pod_name = pod_name
@@ -52,7 +52,7 @@ class RemoteInfo(object):
                 "Could not find container with image "
                 "'datawire/telepresence-k8s' in pod {}.".format(pod_name)
             )
-        self.container_config: Dict[str,object] = containers[0]
+        self.container_config: Dict[str, object] = containers[0]
         self.container_name = cast(str, self.container_config["name"])
 
     def remote_telepresence_version(self) -> str:

@@ -58,7 +58,7 @@ class Cache(object):
         with open(self._save_filename, "w") as f:
             json.dump(self.values, f)
 
-    def __init__(self, values: Dict[object,object]):
+    def __init__(self, values: Dict[object, object]):
         self.values = values
 
     def __contains__(self, key: object) -> bool:

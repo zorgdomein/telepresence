@@ -172,7 +172,7 @@ def versions_from_parentdir(parentdir_prefix: str, root: str,
 
 
 @register_vcs_handler("git", "get_keywords")
-def git_get_keywords(versionfile_abs: str) -> Dict[str,str]:
+def git_get_keywords(versionfile_abs: str) -> Dict[str, str]:
     """Extract version information from the given file."""
     # the code embedded in _version.py can just fetch the value of these
     # keywords. When used from setup.py, we don't want to import _version.py,
@@ -202,8 +202,8 @@ def git_get_keywords(versionfile_abs: str) -> Dict[str,str]:
 
 @register_vcs_handler("git", "keywords")
 def git_versions_from_keywords(
-    keywords: Dict[str,str], tag_prefix: str, verbose: bool
-) -> Dict[str,object]:
+    keywords: Dict[str, str], tag_prefix: str, verbose: bool
+) -> Dict[str, object]:
     """Get version information from git keywords."""
     if not keywords:
         raise NotThisMethod("no keywords at all, weird")
@@ -389,12 +389,16 @@ def render_pep440(pieces: Dict[str, object]) -> str:
         rendered = cast(str, pieces["closest-tag"])
         if pieces["distance"] or pieces["dirty"]:
             rendered += plus_or_dot(pieces)
-            rendered += "%d.g%s" % (cast(int, pieces["distance"]), pieces["short"])
+            rendered += "%d.g%s" % (
+                cast(int, pieces["distance"]), pieces["short"]
+            )
             if pieces["dirty"]:
                 rendered += ".dirty"
     else:
         # exception #1
-        rendered = "0+untagged.%d.g%s" % (cast(int, pieces["distance"]), pieces["short"])
+        rendered = "0+untagged.%d.g%s" % (
+            cast(int, pieces["distance"]), pieces["short"]
+        )
         if pieces["dirty"]:
             rendered += ".dirty"
     return rendered
@@ -476,7 +480,9 @@ def render_git_describe(pieces: Dict[str, object]) -> str:
     if pieces["closest-tag"]:
         rendered = cast(str, pieces["closest-tag"])
         if pieces["distance"]:
-            rendered += "-%d-g%s" % (cast(int, pieces["distance"]), pieces["short"])
+            rendered += "-%d-g%s" % (
+                cast(int, pieces["distance"]), pieces["short"]
+            )
     else:
         # exception #1
         rendered = cast(str, pieces["short"])
@@ -496,7 +502,9 @@ def render_git_describe_long(pieces: Dict[str, object]) -> str:
     """
     if pieces["closest-tag"]:
         rendered = cast(str, pieces["closest-tag"])
-        rendered += "-%d-g%s" % (cast(int, pieces["distance"]), pieces["short"])
+        rendered += "-%d-g%s" % (
+            cast(int, pieces["distance"]), pieces["short"]
+        )
     else:
         # exception #1
         rendered = cast(str, pieces["short"])

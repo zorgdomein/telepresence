@@ -113,7 +113,9 @@ def _split_deployment_container(deployment_arg: str
     return deployment, container
 
 
-def _get_container_name(container: Optional[str], deployment_json: Dict[str, object]) -> str:
+def _get_container_name(
+    container: Optional[str], deployment_json: Dict[str, object]
+) -> str:
     # If no container name was given, just use the first one:
     if not container:
         spec = deployment_json["spec"]["template"]["spec"]  # type: ignore
@@ -122,9 +124,12 @@ def _get_container_name(container: Optional[str], deployment_json: Dict[str, obj
     return container
 
 
-def _merge_expose_ports(expose: PortMapping, container_json: Dict[str, object]) -> None:
+def _merge_expose_ports(
+    expose: PortMapping, container_json: Dict[str, object]
+) -> None:
     expose.merge_automatic_ports([
-        port["containerPort"] for port in container_json.get("ports", [])  # type: ignore
+        port["containerPort"]
+        for port in container_json.get("ports", [])  # type: ignore
         if port["protocol"] == "TCP"
     ])
 
@@ -168,7 +173,8 @@ def supplant_deployment(
         id=run_id,
         max_width=(50 - (len(run_id) + 1))
     )
-    new_deployment_json["metadata"]["name"] = new_deployment_name  # type: ignore
+    new_deployment_json["metadata"]["name"
+                                    ] = new_deployment_name  # type: ignore
 
     def resize_original(replicas: int) -> None:
         """Resize the original deployment (kubectl scale)"""
@@ -200,7 +206,8 @@ def supplant_deployment(
 
     # Scale down the original deployment
     runner.add_cleanup(
-        "Re-scale original deployment", resize_original,
+        "Re-scale original deployment",
+        resize_original,
         deployment_json["spec"]["replicas"]  # type ignore
     )
     resize_original(0)
@@ -217,7 +224,7 @@ def new_swapped_deployment(
     run_id: str,
     telepresence_image: str,
     add_custom_nameserver: bool,
-) -> Tuple[Dict[str,object], Dict[str,object]]:
+) -> Tuple[Dict[str, object], Dict[str, object]]:
     """
     Create a new Deployment that uses telepresence-k8s image.
 

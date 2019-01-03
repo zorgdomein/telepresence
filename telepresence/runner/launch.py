@@ -70,6 +70,7 @@ def _launch_command(
         thread.start()
         threads.append(thread)
     if done and threads:
+
         def joiner() -> None:
             """Wait for streams to finish, then call done callback"""
             assert done is not None  # mypy

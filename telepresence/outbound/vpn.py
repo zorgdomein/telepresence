@@ -81,9 +81,17 @@ def get_proxy_cidrs(
     result = set(k8s_resolve(runner, remote_info, hosts_or_ips))
     assert isinstance(runner.kubectl, KubeInfo)
     context_cache = runner.cache.child(runner.kubectl.context)
-    result.update(cast(Iterable[str], context_cache.lookup("podCIDRs", lambda: podCIDRs(runner))))
+    result.update(
+        cast(
+            Iterable[str],
+            context_cache.lookup("podCIDRs", lambda: podCIDRs(runner))
+        )
+    )
     result.add(
-        cast(str, context_cache.lookup("serviceCIDR", lambda: serviceCIDR(runner)))
+        cast(
+            str,
+            context_cache.lookup("serviceCIDR", lambda: serviceCIDR(runner))
+        )
     )
 
     span.end()
@@ -103,7 +111,10 @@ def k8s_resolve(
     ip_ranges = []
 
     assert isinstance(runner.kubectl, KubeInfo)
-    ipcache = cast(Dict[str,str], runner.cache.child(runner.kubectl.context).child("ips"))
+    ipcache = cast(
+        Dict[str, str],
+        runner.cache.child(runner.kubectl.context).child("ips")
+    )
 
     for proxy_target in hosts_or_ips:
         try:

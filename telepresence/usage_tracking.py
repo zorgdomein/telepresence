@@ -105,7 +105,7 @@ class Scout:
         return value
 
     @staticmethod
-    def __merge_dicts(x: Dict[K,V], y: Dict[K,V]) -> Dict[K,V]:
+    def __merge_dicts(x: Dict[K, V], y: Dict[K, V]) -> Dict[K, V]:
         z = x.copy()
         z.update(y)
         return z

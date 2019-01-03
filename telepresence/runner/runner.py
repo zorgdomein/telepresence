@@ -365,10 +365,7 @@ class Runner(object):
         )
 
     def get_output(
-        self,
-        args: typing.List[str],
-        reveal: bool = False,
-        **kwargs: object
+        self, args: typing.List[str], reveal: bool = False, **kwargs: object
     ) -> str:
         """Return (stripped) command result as unicode string."""
         self.counter = track = self.counter + 1
