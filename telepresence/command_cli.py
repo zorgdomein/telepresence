@@ -15,7 +15,7 @@
 import argparse
 import sys
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import List, Optional
 
 import telepresence
 
@@ -92,7 +92,7 @@ def parse_args(
     available_commands = []
 
     def add_command(
-        name: str, *args: Any, **kwargs: Any
+        name: str, *args: object, **kwargs: object
     ) -> argparse.ArgumentParser:
         available_commands.append(name)
         return subparsers.add_parser(name, *args, **kwargs)

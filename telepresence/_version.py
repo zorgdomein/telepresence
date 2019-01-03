@@ -31,7 +31,7 @@ import os
 import re
 import subprocess
 import sys
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, cast
+from typing import Callable, Dict, List, Optional, Tuple, TypeVar, cast
 
 
 def get_keywords() -> Dict[str, str]:
@@ -75,9 +75,9 @@ class NotThisMethod(Exception):
     """Exception raised if a method is not valid for the current scenario."""
 
 
-LONG_VERSION_PY: Dict[Any, Any] = {}
+LONG_VERSION_PY: Dict[object, object] = {}
 
-HANDLERS: Dict[str, Dict[str, Any]] = {}
+HANDLERS: Dict[str, Dict[str, object]] = {}
 T = TypeVar('T')
 
 
@@ -140,7 +140,7 @@ def run_command(
 
 
 def versions_from_parentdir(parentdir_prefix: str, root: str,
-                            verbose: bool) -> Dict[str, Any]:
+                            verbose: bool) -> Dict[str, object]:
     """Try to determine the version from the parent directory name.
 
     Source tarballs conventionally unpack into a directory that includes both
@@ -203,7 +203,7 @@ def git_get_keywords(versionfile_abs: str) -> Dict[str,str]:
 @register_vcs_handler("git", "keywords")
 def git_versions_from_keywords(
     keywords: Dict[str,str], tag_prefix: str, verbose: bool
-) -> Dict[str,Any]:
+) -> Dict[str,object]:
     """Get version information from git keywords."""
     if not keywords:
         raise NotThisMethod("no keywords at all, weird")
@@ -266,7 +266,7 @@ def git_versions_from_keywords(
 
 @register_vcs_handler("git", "pieces_from_vcs")
 def git_pieces_from_vcs(tag_prefix: str, root: str,
-                        verbose: bool) -> Dict[str, Any]:
+                        verbose: bool) -> Dict[str, object]:
     """Get version from 'git describe' in the root of the source tree.
 
     This only gets called if the git-archive 'subst' keywords were *not*
@@ -303,7 +303,7 @@ def git_pieces_from_vcs(tag_prefix: str, root: str,
         raise NotThisMethod("'git rev-parse' failed")
     full_out = full_out.strip()
 
-    pieces: Dict[str, Any] = {}
+    pieces: Dict[str, object] = {}
     pieces["long"] = full_out
     pieces["short"] = full_out[:7]  # maybe improved later
     pieces["error"] = None
@@ -369,14 +369,14 @@ def git_pieces_from_vcs(tag_prefix: str, root: str,
     return pieces
 
 
-def plus_or_dot(pieces: Dict[str, Any]) -> str:
+def plus_or_dot(pieces: Dict[str, object]) -> str:
     """Return a + if we don't already have one, else return a ."""
-    if "+" in pieces.get("closest-tag", ""):
+    if "+" in cast(str, pieces.get("closest-tag", "")):
         return "."
     return "+"
 
 
-def render_pep440(pieces: Dict[str, Any]) -> str:
+def render_pep440(pieces: Dict[str, object]) -> str:
     """Build up version string, with post-release "local version identifier".
 
     Our goal: TAG[+DISTANCE.gHEX[.dirty]] . Note that if you
@@ -386,37 +386,37 @@ def render_pep440(pieces: Dict[str, Any]) -> str:
     1: no tags. git_describe was just HEX. 0+untagged.DISTANCE.gHEX[.dirty]
     """
     if pieces["closest-tag"]:
-        rendered: str = pieces["closest-tag"]
+        rendered = cast(str, pieces["closest-tag"])
         if pieces["distance"] or pieces["dirty"]:
             rendered += plus_or_dot(pieces)
-            rendered += "%d.g%s" % (pieces["distance"], pieces["short"])
+            rendered += "%d.g%s" % (cast(int, pieces["distance"]), pieces["short"])
             if pieces["dirty"]:
                 rendered += ".dirty"
     else:
         # exception #1
-        rendered = "0+untagged.%d.g%s" % (pieces["distance"], pieces["short"])
+        rendered = "0+untagged.%d.g%s" % (cast(int, pieces["distance"]), pieces["short"])
         if pieces["dirty"]:
             rendered += ".dirty"
     return rendered
 
 
-def render_pep440_pre(pieces: Dict[str, Any]) -> str:
+def render_pep440_pre(pieces: Dict[str, object]) -> str:
     """TAG[.post.devDISTANCE] -- No -dirty.
 
     Exceptions:
     1: no tags. 0.post.devDISTANCE
     """
     if pieces["closest-tag"]:
-        rendered: str = pieces["closest-tag"]
+        rendered = cast(str, pieces["closest-tag"])
         if pieces["distance"]:
-            rendered += ".post.dev%d" % pieces["distance"]
+            rendered += ".post.dev%d" % cast(int, pieces["distance"])
     else:
         # exception #1
-        rendered = "0.post.dev%d" % pieces["distance"]
+        rendered = "0.post.dev%d" % cast(int, pieces["distance"])
     return rendered
 
 
-def render_pep440_post(pieces: Dict[str, Any]) -> str:
+def render_pep440_post(pieces: Dict[str, object]) -> str:
     """TAG[.postDISTANCE[.dev0]+gHEX] .
 
     The ".dev0" means dirty. Note that .dev0 sorts backwards
@@ -427,23 +427,23 @@ def render_pep440_post(pieces: Dict[str, Any]) -> str:
     1: no tags. 0.postDISTANCE[.dev0]
     """
     if pieces["closest-tag"]:
-        rendered: str = pieces["closest-tag"]
+        rendered = cast(str, pieces["closest-tag"])
         if pieces["distance"] or pieces["dirty"]:
-            rendered += ".post%d" % pieces["distance"]
+            rendered += ".post%d" % cast(int, pieces["distance"])
             if pieces["dirty"]:
                 rendered += ".dev0"
             rendered += plus_or_dot(pieces)
             rendered += "g%s" % pieces["short"]
     else:
         # exception #1
-        rendered = "0.post%d" % pieces["distance"]
+        rendered = "0.post%d" % cast(int, pieces["distance"])
         if pieces["dirty"]:
             rendered += ".dev0"
         rendered += "+g%s" % pieces["short"]
     return rendered
 
 
-def render_pep440_old(pieces: Dict[str, Any]) -> str:
+def render_pep440_old(pieces: Dict[str, object]) -> str:
     """TAG[.postDISTANCE[.dev0]] .
 
     The ".dev0" means dirty.
@@ -452,20 +452,20 @@ def render_pep440_old(pieces: Dict[str, Any]) -> str:
     1: no tags. 0.postDISTANCE[.dev0]
     """
     if pieces["closest-tag"]:
-        rendered: str = pieces["closest-tag"]
+        rendered = cast(str, pieces["closest-tag"])
         if pieces["distance"] or pieces["dirty"]:
-            rendered += ".post%d" % pieces["distance"]
+            rendered += ".post%d" % cast(int, pieces["distance"])
             if pieces["dirty"]:
                 rendered += ".dev0"
     else:
         # exception #1
-        rendered = "0.post%d" % pieces["distance"]
+        rendered = "0.post%d" % cast(int, pieces["distance"])
         if pieces["dirty"]:
             rendered += ".dev0"
     return rendered
 
 
-def render_git_describe(pieces: Dict[str, Any]) -> str:
+def render_git_describe(pieces: Dict[str, object]) -> str:
     """TAG[-DISTANCE-gHEX][-dirty].
 
     Like 'git describe --tags --dirty --always'.
@@ -474,18 +474,18 @@ def render_git_describe(pieces: Dict[str, Any]) -> str:
     1: no tags. HEX[-dirty]  (note: no 'g' prefix)
     """
     if pieces["closest-tag"]:
-        rendered: str = pieces["closest-tag"]
+        rendered = cast(str, pieces["closest-tag"])
         if pieces["distance"]:
-            rendered += "-%d-g%s" % (pieces["distance"], pieces["short"])
+            rendered += "-%d-g%s" % (cast(int, pieces["distance"]), pieces["short"])
     else:
         # exception #1
-        rendered = pieces["short"]
+        rendered = cast(str, pieces["short"])
     if pieces["dirty"]:
         rendered += "-dirty"
     return rendered
 
 
-def render_git_describe_long(pieces: Dict[str, Any]) -> str:
+def render_git_describe_long(pieces: Dict[str, object]) -> str:
     """TAG-DISTANCE-gHEX[-dirty].
 
     Like 'git describe --tags --dirty --always -long'.
@@ -495,17 +495,17 @@ def render_git_describe_long(pieces: Dict[str, Any]) -> str:
     1: no tags. HEX[-dirty]  (note: no 'g' prefix)
     """
     if pieces["closest-tag"]:
-        rendered: str = pieces["closest-tag"]
-        rendered += "-%d-g%s" % (pieces["distance"], pieces["short"])
+        rendered = cast(str, pieces["closest-tag"])
+        rendered += "-%d-g%s" % (cast(int, pieces["distance"]), pieces["short"])
     else:
         # exception #1
-        rendered = pieces["short"]
+        rendered = cast(str, pieces["short"])
     if pieces["dirty"]:
         rendered += "-dirty"
     return rendered
 
 
-def render(pieces: Dict[str, Any], style: str) -> Dict[str, Any]:
+def render(pieces: Dict[str, object], style: str) -> Dict[str, object]:
     """Render the given version pieces into the requested style."""
     if pieces["error"]:
         return {
@@ -543,7 +543,7 @@ def render(pieces: Dict[str, Any], style: str) -> Dict[str, Any]:
     }
 
 
-def get_versions() -> Dict[str, Any]:
+def get_versions() -> Dict[str, object]:
     """Get version information or return default if unable to do so."""
     # I am in _version.py, which lives at ROOT/VERSIONFILE_SOURCE. If we have
     # __file__, we can work backwards from there to the root. Some

@@ -52,8 +52,8 @@ class RemoteInfo(object):
                 "Could not find container with image "
                 "'datawire/telepresence-k8s' in pod {}.".format(pod_name)
             )
-        self.container_config: Dict[Any,Any] = containers[0]
-        self.container_name: str = self.container_config["name"]
+        self.container_config: Dict[str,object] = containers[0]
+        self.container_name = cast(str, self.container_config["name"])
 
     def remote_telepresence_version(self) -> str:
         """Return the version used by the remote Telepresence container."""
@@ -68,7 +68,7 @@ def get_deployment_json(
     deployment_name: str,
     deployment_type: str,
     run_id: Optional[str] = None,
-) -> Dict[Any, Any]:
+) -> Dict[str, Any]:
     """Get the decoded JSON for a deployment.
 
     If this is a Deployment we created, the run_id is also passed in - this is
@@ -85,7 +85,7 @@ def get_deployment_json(
             "--export",
         ]
         if run_id is None:
-            ret: Dict[Any, Any] = json.loads(
+            ret: Dict[str, object] = json.loads(
                 runner.get_output(
                     runner.kubectl(get_deployment + [deployment_name]),
                     stderr=STDOUT

@@ -14,7 +14,7 @@
 
 import json
 from time import time
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Dict, Optional, cast
 
 
 class Cache(object):
@@ -36,7 +36,7 @@ class Cache(object):
     """
 
     @classmethod
-    def load(cls: Any, filename: str) -> 'Cache':
+    def load(cls: object, filename: str) -> 'Cache':
         """Return a cache loaded from a file"""
         try:
             with open(filename, "r") as f:
@@ -58,25 +58,25 @@ class Cache(object):
         with open(self._save_filename, "w") as f:
             json.dump(self.values, f)
 
-    def __init__(self, values: Dict[Any,Any]):
+    def __init__(self, values: Dict[object,object]):
         self.values = values
 
-    def __contains__(self, key: Any) -> bool:
+    def __contains__(self, key: object) -> bool:
         return key in self.values
 
-    def __getitem__(self, key: Any) -> Any:
+    def __getitem__(self, key: object) -> object:
         return self.values[key]
 
-    def __setitem__(self, key: Any, value: Any) -> None:
+    def __setitem__(self, key: object, value: object) -> None:
         self.values[key] = value
 
-    def child(self, key: Any) -> 'Cache':
+    def child(self, key: object) -> 'Cache':
         """
         Retrieve a child cache that operates over a separate keyspace but is
         loaded and saved with the parent cache.
         """
         if key in self.values:
-            child = self.values[key]
+            child = cast(Dict[object, object], self.values[key])
         else:
             child = {}
             self.values[key] = child
@@ -89,12 +89,12 @@ class Cache(object):
         :param ttl: Time in seconds that the cache is considered valid.
         """
         now = time()
-        created = self.lookup("created", lambda: 0)
+        created = cast(float, self.lookup("created", lambda: 0))
         if (now - created) > ttl:
             self.clear()
             self["created"] = now
 
-    def lookup(self, key: Any, function: Callable[[], Any]) -> Any:
+    def lookup(self, key: object, function: Callable[[], object]) -> object:
         """
         Retrieve the value for the associated key. If the value is not already
         cached, call function with no arguments to compute the value and cache

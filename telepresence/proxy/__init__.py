@@ -23,12 +23,14 @@ from .deployment import (
 )
 from .remote import RemoteInfo, get_remote_info
 from telepresence.runner import Runner
+from telepresence.startup import KubeInfo
 
 
 def setup(runner: Runner, args: cli.Args) -> Callable[[Runner], RemoteInfo]:
     """
     Determine how the user wants to set up the proxy in the cluster.
     """
+    assert isinstance(runner.kubectl, KubeInfo)
     deployment_type = "deployment"
     if runner.kubectl.command == "oc":
         # OpenShift Origin uses DeploymentConfig instead, but for swapping we
@@ -73,6 +75,7 @@ def setup(runner: Runner, args: cli.Args) -> Callable[[Runner], RemoteInfo]:
     # loop... We've fixed that for most cases by setting a distinct name server
     # for the proxy to use when making a new proxy pod, but that does not work
     # for --deployment.
+    assert isinstance(runner.kubectl, KubeInfo)
     add_custom_ns = args.method == "vpn-tcp" and runner.kubectl.in_local_vm
     if add_custom_ns and args.operation == "deployment":
         raise runner.fail(

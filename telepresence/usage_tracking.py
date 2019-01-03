@@ -15,7 +15,7 @@
 import json
 import os
 import platform
-from typing import Any, Dict, Union, Tuple, TypeVar
+from typing import Dict, Union, Tuple, TypeVar, cast
 from pathlib import Path
 from urllib import request
 from uuid import uuid4
@@ -31,7 +31,7 @@ V = TypeVar('V')
 
 class Scout:
     def __init__(
-        self, app: str, version: str, install_id: str, **kwargs: Any
+        self, app: str, version: str, install_id: str, **kwargs: object
     ) -> None:
         self.app = Scout.__not_blank("app", app)
         self.version = Scout.__not_blank("version", version)
@@ -45,8 +45,8 @@ class Scout:
                                    "1").lower() in {"1", "true", "yes"}
         self.disabled = Scout.__is_disabled()
 
-    def report(self, **kwargs: Any) -> Dict[str, Any]:
-        result = {'latest_version': self.version}
+    def report(self, **kwargs: object) -> Dict[str, object]:
+        result: Dict[str, object] = {'latest_version': self.version}
 
         if self.disabled:
             return result
@@ -164,7 +164,7 @@ def call_scout(
 
     my_version = get_numeric_version(__version__)
     try:
-        latest = get_numeric_version(scouted["latest_version"])
+        latest = get_numeric_version(cast(str, scouted["latest_version"]))
     except (KeyError, ValueError):
         latest = my_version
 

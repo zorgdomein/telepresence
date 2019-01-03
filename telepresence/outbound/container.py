@@ -44,7 +44,7 @@ def docker_runify(args: List[str], env: bool = False) -> List[str]:
         return args
 
 
-def make_docker_kill(runner: Runner, name: str) -> Callable:
+def make_docker_kill(runner: Runner, name: str) -> Callable[[], None]:
     """Return a function that will kill a named docker container."""
 
     def kill() -> None:

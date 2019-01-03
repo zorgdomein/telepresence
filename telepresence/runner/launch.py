@@ -43,13 +43,6 @@ def _launch_command(
             callback(line)
         callback(None)
 
-    def joiner() -> None:
-        """Wait for streams to finish, then call done callback"""
-        assert done is not None  # mypy
-        for th in threads:
-            th.join()
-        done(process)
-
     kwargs = kwargs.copy()
     in_data = kwargs.get("input")
     if "input" in kwargs:
@@ -63,6 +56,7 @@ def _launch_command(
     kwargs["universal_newlines"] = True  # Text streams, not byte streams
     process = Popen(args, **kwargs)
     threads = []
+
     if process.stdout:
         thread = Thread(
             target=pump_stream, args=(out_cb, process.stdout), daemon=True
@@ -76,6 +70,13 @@ def _launch_command(
         thread.start()
         threads.append(thread)
     if done and threads:
+        def joiner() -> None:
+            """Wait for streams to finish, then call done callback"""
+            assert done is not None  # mypy
+            for th in threads:
+                th.join()
+            done(process)
+
         Thread(target=joiner, daemon=True).start()
     if in_data:
         process.stdin.write(str(in_data, "utf-8"))

@@ -14,7 +14,7 @@
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
-from typing import Any, Callable
+from typing import Callable
 
 from .runner import Runner
 
@@ -32,7 +32,7 @@ class DumbHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
 
-    def log_message(self, format: str, *args: Any) -> None:
+    def log_message(self, format: str, *args: object) -> None:
         """
         Make sure log messages go to the right place
         """

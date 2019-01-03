@@ -19,6 +19,7 @@ from typing import Dict, List
 from telepresence.connect import SSH
 from telepresence.proxy import RemoteInfo
 from telepresence.runner import Runner
+from telepresence.startup import KubeInfo
 from telepresence.utilities import kill_process
 
 from .vpn import connect_sshuttle
@@ -82,6 +83,7 @@ def get_local_env(
 ) -> Dict[str, str]:
     env = os.environ.copy()
     env.update(env_overrides)
+    assert isinstance(runner.kubectl, KubeInfo)
     env["PROMPT_COMMAND"] = (
         'PS1="@{}|$PS1";unset PROMPT_COMMAND'.format(runner.kubectl.context)
     )

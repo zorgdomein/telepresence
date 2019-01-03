@@ -46,9 +46,9 @@ if typing.TYPE_CHECKING:
 
 class _CleanupItem(typing.NamedTuple):
     name: str
-    callable: typing.Callable[..., typing.Any]
-    args: typing.Tuple[typing.Any, ...]
-    kwargs: typing.Dict[str, typing.Any]
+    callable: typing.Callable[..., object]
+    args: typing.Tuple[object, ...]
+    kwargs: typing.Dict[str, object]
 
 
 class Runner(object):
@@ -330,7 +330,7 @@ class Runner(object):
         self, track: int, msg1: str, msg2: str,
         out_cb: typing.Callable[[typing.Optional[str]], None],
         err_cb: typing.Callable[[typing.Optional[str]], None],
-        args: typing.List[str], **kwargs: typing.Any
+        args: typing.List[str], **kwargs: object
     ) -> None:
         """Run a command synchronously"""
         self.output.write("[{}] {}: {}".format(track, msg1, str_command(args)))
@@ -356,7 +356,7 @@ class Runner(object):
                 "[{}] {} in {:0.2f} secs.".format(track, msg2, spent)
             )
 
-    def check_call(self, args: typing.List[str], **kwargs: typing.Any) -> None:
+    def check_call(self, args: typing.List[str], **kwargs: object) -> None:
         """Run a subprocess, make sure it exited with 0."""
         self.counter = track = self.counter + 1
         out_cb = err_cb = self._make_logger(track)
@@ -368,7 +368,7 @@ class Runner(object):
         self,
         args: typing.List[str],
         reveal: bool = False,
-        **kwargs: typing.Any
+        **kwargs: object
     ) -> str:
         """Return (stripped) command result as unicode string."""
         self.counter = track = self.counter + 1
@@ -516,8 +516,8 @@ class Runner(object):
     # Cleanup
 
     def add_cleanup(
-        self, name: str, callback: typing.Callable[..., typing.Any], *args: typing.Any,
-        **kwargs: typing.Any
+        self, name: str, callback: typing.Callable[..., object], *args: object,
+        **kwargs: object
     ) -> None:
         """
         Set up callback to be called during cleanup processing on exit.

@@ -113,18 +113,18 @@ def _split_deployment_container(deployment_arg: str
     return deployment, container
 
 
-def _get_container_name(container: Optional[str], deployment_json: Any) -> str:
+def _get_container_name(container: Optional[str], deployment_json: Dict[str, object]) -> str:
     # If no container name was given, just use the first one:
     if not container:
-        spec = deployment_json["spec"]["template"]["spec"]
+        spec = deployment_json["spec"]["template"]["spec"]  # type: ignore
         container = spec["containers"][0]["name"]
         assert container is not None
     return container
 
 
-def _merge_expose_ports(expose: PortMapping, container_json: Any) -> None:
+def _merge_expose_ports(expose: PortMapping, container_json: Dict[str, object]) -> None:
     expose.merge_automatic_ports([
-        port["containerPort"] for port in container_json.get("ports", [])
+        port["containerPort"] for port in container_json.get("ports", [])  # type: ignore
         if port["protocol"] == "TCP"
     ])
 
@@ -168,7 +168,7 @@ def supplant_deployment(
         id=run_id,
         max_width=(50 - (len(run_id) + 1))
     )
-    new_deployment_json["metadata"]["name"] = new_deployment_name
+    new_deployment_json["metadata"]["name"] = new_deployment_name  # type: ignore
 
     def resize_original(replicas: int) -> None:
         """Resize the original deployment (kubectl scale)"""
@@ -201,7 +201,7 @@ def supplant_deployment(
     # Scale down the original deployment
     runner.add_cleanup(
         "Re-scale original deployment", resize_original,
-        deployment_json["spec"]["replicas"]
+        deployment_json["spec"]["replicas"]  # type ignore
     )
     resize_original(0)
 
@@ -212,12 +212,12 @@ def supplant_deployment(
 
 
 def new_swapped_deployment(
-    old_deployment: Dict[Any, Any],
+    old_deployment: Dict[str, Any],
     container_to_update: str,
     run_id: str,
     telepresence_image: str,
     add_custom_nameserver: bool,
-) -> Tuple[Dict[Any,Any], Dict[Any,Any]]:
+) -> Tuple[Dict[str,object], Dict[str,object]]:
     """
     Create a new Deployment that uses telepresence-k8s image.
 
@@ -327,7 +327,7 @@ def swap_deployment_openshift(
         )
     )
 
-    def apply_json(json_config: Any) -> None:
+    def apply_json(json_config: object) -> None:
         runner.check_call(
             runner.kubectl("apply", "-f", "-"),
             input=json.dumps(json_config).encode("utf-8")

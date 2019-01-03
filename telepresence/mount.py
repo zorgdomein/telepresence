@@ -23,7 +23,7 @@ from telepresence.runner import Runner
 
 def mount_remote_volumes(
     runner: Runner, ssh: SSH, allow_all_users: bool, mount_dir: str
-) -> Tuple[str, Callable]:
+) -> Tuple[str, Callable[[], None]]:
     """
     sshfs is used to mount the remote system locally.
 

@@ -16,12 +16,13 @@ import ipaddress
 import json
 from socket import gethostbyname, gaierror
 from subprocess import CalledProcessError
-from typing import List, Iterable
+from typing import Dict, List, Iterable, cast
 
 from telepresence.connect import SSH
 from telepresence.proxy import RemoteInfo
 from telepresence.runner import Runner
 from telepresence.utilities import random_name
+from telepresence.startup import KubeInfo
 
 
 def covering_cidr(ips: List[str]) -> str:
@@ -78,10 +79,11 @@ def get_proxy_cidrs(
     # resolution inside Kubernetes, so we get cloud-local IP addresses for
     # cloud resources:
     result = set(k8s_resolve(runner, remote_info, hosts_or_ips))
+    assert isinstance(runner.kubectl, KubeInfo)
     context_cache = runner.cache.child(runner.kubectl.context)
-    result.update(context_cache.lookup("podCIDRs", lambda: podCIDRs(runner)))
+    result.update(cast(Iterable[str], context_cache.lookup("podCIDRs", lambda: podCIDRs(runner))))
     result.add(
-        context_cache.lookup("serviceCIDR", lambda: serviceCIDR(runner))
+        cast(str, context_cache.lookup("serviceCIDR", lambda: serviceCIDR(runner)))
     )
 
     span.end()
@@ -100,7 +102,8 @@ def k8s_resolve(
     hostnames = []
     ip_ranges = []
 
-    ipcache = runner.cache.child(runner.kubectl.context).child("ips")
+    assert isinstance(runner.kubectl, KubeInfo)
+    ipcache = cast(Dict[str,str], runner.cache.child(runner.kubectl.context).child("ips"))
 
     for proxy_target in hosts_or_ips:
         try:
@@ -185,7 +188,7 @@ def serviceCIDR(runner: Runner) -> str:
     than 8, to ensure some coverage of the IP range.
     """
 
-    def get_service_ips() -> List:
+    def get_service_ips() -> List[str]:
         services = json.loads(
             runner.get_output(runner.kubectl("get", "services", "-o", "json"))
         )["items"]

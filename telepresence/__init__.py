@@ -16,16 +16,17 @@ Telepresence: local development environment for a remote Kubernetes cluster.
 """
 
 from pathlib import Path
+from typing import cast
 import os
 
 # Version number computed by Versioneer. See _version.py for info.
 from ._version import get_versions
-__version__ = get_versions()['version']
+__version__ = cast(str, get_versions()['version'])
 del get_versions
 
 # Use the most recent released image version. Override below:
 try:
-    image_version: str = __version__[:__version__.index("-")]
+    image_version = __version__[:__version__.index("-")]
 except ValueError:
     image_version = __version__
 
