@@ -31,7 +31,8 @@ def covering_cidr(ips: List[str]) -> str:
     Presumes it's at least a /24.
     """
 
-    def collapse(ns: Iterable[ipaddress.IPv4Network]) -> List[ipaddress.IPv4Network]:
+    def collapse(ns: Iterable[ipaddress.IPv4Network]
+                 ) -> List[ipaddress.IPv4Network]:
         return list(ipaddress.collapse_addresses(ns))
 
     assert len(ips) > 0
@@ -183,7 +184,6 @@ def serviceCIDR(runner: Runner) -> str:
     existing Service IPs. We create more services if there are less
     than 8, to ensure some coverage of the IP range.
     """
-
 
     def get_service_ips() -> List:
         services = json.loads(

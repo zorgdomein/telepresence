@@ -38,7 +38,9 @@ def main() -> typing.NoReturn:
 
     # Check for a subcommand
     with crash_reporting():
-        cmd_args: typing.Optional[CommandArgs] = command_parse_args(None, only_for_commands=True)
+        cmd_args: typing.Optional[CommandArgs] = command_parse_args(
+            None, only_for_commands=True
+        )
     if cmd_args is not None:
         command_main(cmd_args)
 

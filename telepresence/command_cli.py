@@ -19,10 +19,14 @@ from typing import Any, List, Optional
 
 import telepresence
 
+
 class Args(argparse.Namespace):
     pass
 
-def parse_args(argv: Optional[List[str]]=None, only_for_commands: bool=False) -> Optional[Args]:
+
+def parse_args(
+    argv: Optional[List[str]] = None, only_for_commands: bool = False
+) -> Optional[Args]:
 
     prog = str(Path(sys.argv[0]).name)
     parser = argparse.ArgumentParser(
@@ -87,7 +91,9 @@ def parse_args(argv: Optional[List[str]]=None, only_for_commands: bool=False) ->
     )
     available_commands = []
 
-    def add_command(name: str, *args: Any, **kwargs: Any) -> argparse.ArgumentParser:
+    def add_command(
+        name: str, *args: Any, **kwargs: Any
+    ) -> argparse.ArgumentParser:
         available_commands.append(name)
         return subparsers.add_parser(name, *args, **kwargs)
 

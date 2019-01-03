@@ -44,6 +44,7 @@ from .span import Span
 if typing.TYPE_CHECKING:
     from telepresence import command_cli, cli
 
+
 class _CleanupItem(typing.NamedTuple):
     name: str
     callable: typing.Callable
@@ -55,8 +56,7 @@ class Runner(object):
     """Context for running subprocesses."""
 
     def __init__(
-            self,
-            args: typing.Union['command_cli.Args', 'cli.Args']
+        self, args: typing.Union['command_cli.Args', 'cli.Args']
     ) -> None:
         logfile_path = args.logfile
         verbose = args.verbose
@@ -136,7 +136,9 @@ class Runner(object):
 
         self.kubectl = KubeInfo(self, args)
 
-    def span(self, name: str = "", context: bool=True, verbose: bool=True) -> Span:
+    def span(
+        self, name: str = "", context: bool = True, verbose: bool = True
+    ) -> Span:
         """Write caller's frame info to the log."""
 
         if context:
@@ -154,7 +156,7 @@ class Runner(object):
         s.begin()
         return s
 
-    def write(self, message: str, prefix: str="TEL") -> None:
+    def write(self, message: str, prefix: str = "TEL") -> None:
         """Don't use this..."""
         return self.output.write(message, prefix)
 
@@ -294,7 +296,12 @@ class Runner(object):
 
     # Subprocesses
 
-    def _make_logger(self, track: int, capture: typing.Optional[typing.MutableSequence[typing.Optional[str]]]=None) -> typing.Callable[[typing.Optional[str]],None]:
+    def _make_logger(
+        self,
+        track: int,
+        capture: typing.Optional[typing.MutableSequence[typing.Optional[str]]
+                                 ] = None
+    ) -> typing.Callable[[typing.Optional[str]], None]:
         """Create a logger that optionally captures what is logged"""
         prefix = "{:>3d}".format(track)
 
@@ -315,14 +322,11 @@ class Runner(object):
 
         return logger
 
-    def _run_command(self,
-                     track: int,
-                     msg1: str,
-                     msg2: str,
-                     out_cb: typing.Callable[[typing.Optional[str]],None],
-                     err_cb: typing.Callable[[typing.Optional[str]],None],
-                     args: typing.List[str],
-                     **kwargs: typing.Any
+    def _run_command(
+        self, track: int, msg1: str, msg2: str,
+        out_cb: typing.Callable[[typing.Optional[str]], None],
+        err_cb: typing.Callable[[typing.Optional[str]], None],
+        args: typing.List[str], **kwargs: typing.Any
     ) -> None:
         """Run a command synchronously"""
         self.output.write("[{}] {}: {}".format(track, msg1, str_command(args)))
@@ -356,7 +360,12 @@ class Runner(object):
             track, "Running", "ran", out_cb, err_cb, args, **kwargs
         )
 
-    def get_output(self, args: typing.List[str], reveal: bool=False, **kwargs: typing.Any) -> str:
+    def get_output(
+        self,
+        args: typing.List[str],
+        reveal: bool = False,
+        **kwargs: typing.Any
+    ) -> str:
         """Return (stripped) command result as unicode string."""
         self.counter = track = self.counter + 1
         capture: typing.List[typing.Optional[str]] = []
@@ -417,7 +426,8 @@ class Runner(object):
 
         """
         self.counter = track = self.counter + 1
-        capture: typing.MutableSequence[typing.Optional[str]] = deque(maxlen=10)
+        capture: typing.MutableSequence[typing.Optional[str]
+                                        ] = deque(maxlen=10)
         out_cb = err_cb = self._make_logger(track, capture=capture)
 
         def done(proc: Popen) -> None:
@@ -470,7 +480,8 @@ class Runner(object):
             raise
         self.add_cleanup(
             "Kill BG process [{}] {}".format(track, name),
-            killer if killer else typing.cast(typing.Callable[[],None], partial(kill_process, process)),
+            killer if killer else typing.
+            cast(typing.Callable[[], None], partial(kill_process, process)),
         )
         if notify:
             # We need a select()able notification of death in case the
@@ -501,7 +512,10 @@ class Runner(object):
 
     # Cleanup
 
-    def add_cleanup(self, name: str, callback: typing.Callable, *args: typing.Any, **kwargs: typing.Any) -> None:
+    def add_cleanup(
+        self, name: str, callback: typing.Callable, *args: typing.Any,
+        **kwargs: typing.Any
+    ) -> None:
         """
         Set up callback to be called during cleanup processing on exit.
 
@@ -511,7 +525,9 @@ class Runner(object):
         cleanup_item = _CleanupItem(name, callback, args, kwargs)
         self.cleanup_stack.append(cleanup_item)
 
-    def _signal_received(self, sig_num: signal.Signals, frame: types.FrameType) -> None:
+    def _signal_received(
+        self, sig_num: signal.Signals, frame: types.FrameType
+    ) -> None:
         try:
             sig_name = signal.Signals(sig_num).name
         except (ValueError, AttributeError):
@@ -527,7 +543,7 @@ class Runner(object):
         )
         self.exit()
 
-    def _do_cleanup(self) -> typing.List[typing.Tuple[str,BaseException]]:
+    def _do_cleanup(self) -> typing.List[typing.Tuple[str, BaseException]]:
         failures = []
         self.show("Exit cleanup in progress")
         for name, callback, args, kwargs in reversed(self.cleanup_stack):
@@ -563,7 +579,7 @@ class Runner(object):
         failures = "\n\n".join(self.ended)
         raise BackgroundProcessCrash(message, failures)
 
-    def fail(self, message: str, code: int=1) -> typing.NoReturn:
+    def fail(self, message: str, code: int = 1) -> typing.NoReturn:
         """
         Report failure to the user and exit. Does not return. Cleanup will run
         before the process ends. This does not invoke the crash reporter; an
@@ -595,10 +611,14 @@ class Runner(object):
         """
         self.write("Everything launched. Waiting to exit...")
         main_code = None
+
+        # Wait until *either* main_process exits, or
+        # self.quitting=True.
         span = self.span()
         while not self.quitting and main_code is None:
             sleep(0.1)
             main_code = main_process.poll()
+        main_code = main_process.poll()
         span.end()
 
         if main_code is not None:

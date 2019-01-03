@@ -83,7 +83,8 @@ def connect(
     return socks_port, ssh
 
 
-def setup(runner: Runner, args: Args) -> Callable[[Runner, RemoteInfo], Tuple[int, SSH]]:
+def setup(runner: Runner,
+          args: Args) -> Callable[[Runner, RemoteInfo], Tuple[int, SSH]]:
     # Make sure we can run openssh:
     runner.require(["ssh"], "Please install the OpenSSH client")
     try:
@@ -95,7 +96,8 @@ def setup(runner: Runner, args: Args) -> Callable[[Runner, RemoteInfo], Tuple[in
 
     is_container_mode = args.method == "container"
 
-    def do_connect(runner_: Runner, remote_info: RemoteInfo) -> Tuple[int, SSH]:
+    def do_connect(runner_: Runner,
+                   remote_info: RemoteInfo) -> Tuple[int, SSH]:
         return connect(runner_, remote_info, is_container_mode, args.expose)
 
     return do_connect

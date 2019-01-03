@@ -71,7 +71,7 @@ class Output(object):
         elif image_version != __version__:
             self.write("  Using images version {} (dev)".format(image_version))
 
-    def write(self, message: str, prefix: str="TEL") -> None:
+    def write(self, message: str, prefix: str = "TEL") -> None:
         """Write a message to the log."""
         if self.logfile.closed:
             return

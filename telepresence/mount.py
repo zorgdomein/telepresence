@@ -86,7 +86,10 @@ def mount_remote_volumes(
     return mount_dir, cleanup if mounted else no_cleanup
 
 
-def mount_remote(runner: Runner, mount: Union[bool, Path], ssh: SSH, allow_all_users: bool, env: Dict[str, str]) -> Optional[str]:
+def mount_remote(
+    runner: Runner, mount: Union[bool, Path], ssh: SSH, allow_all_users: bool,
+    env: Dict[str, str]
+) -> Optional[str]:
     """Handle filesystem stuff (pod name, ssh object)"""
     if mount:
         # The mount directory is made here, removed by mount_cleanup if
@@ -117,7 +120,8 @@ def mount_remote(runner: Runner, mount: Union[bool, Path], ssh: SSH, allow_all_u
     return mount_dir
 
 
-def setup(runner: Runner, args: Args) -> Callable[[Runner, Dict[str,str], SSH], Optional[str]]:
+def setup(runner: Runner, args: Args
+          ) -> Callable[[Runner, Dict[str, str], SSH], Optional[str]]:
     """
     Set up one of three mount_remote implementations:
     - Do nothing
@@ -144,8 +148,7 @@ def setup(runner: Runner, args: Args) -> Callable[[Runner, Dict[str,str], SSH], 
             "https://telepresence.io/howto/volumes.html for details."
         )
 
-
-    def fn(runner_: Runner, env: Dict[str,str], ssh: SSH) -> Optional[str]:
+    def fn(runner_: Runner, env: Dict[str, str], ssh: SSH) -> Optional[str]:
         return mount_remote(runner_, args.mount, ssh, allow_all_users, env)
 
     return fn

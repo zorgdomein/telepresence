@@ -32,7 +32,7 @@ class PortMapping(object):
     """Maps local ports to listen to remote exposed ports."""
 
     def __init__(self) -> None:
-        self._mapping: Dict[int,int] = {}
+        self._mapping: Dict[int, int] = {}
 
     @classmethod
     def parse(cls, port_strings: List[str]) -> 'PortMapping':
@@ -123,7 +123,7 @@ def report_crash(error: str, log_path: str, logs: str) -> None:
 
 
 @contextmanager
-def crash_reporting(runner: Optional[Runner]=None) -> Iterator[None]:
+def crash_reporting(runner: Optional[Runner] = None) -> Iterator[None]:
     """
     Decorator that catches unexpected errors
     """
@@ -194,7 +194,7 @@ class Args(RawArgs):
     expose: PortMapping  # type: ignore
 
 
-def parse_args(argv: Optional[Sequence[str]]=None) -> Args:
+def parse_args(argv: Optional[Sequence[str]] = None) -> Args:
     """Create a new ArgumentParser and parse sys.argv."""
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -388,13 +388,12 @@ def parse_args(argv: Optional[Sequence[str]]=None) -> Args:
         )
     )
 
-    _args = namespace=RawArgs()
+    _args = namespace = RawArgs()
     parser.parse_args(argv, namespace=_args)
 
     # Delegate subcommand help to the other parser
     if _args.help_experimental:
         show_command_help_and_quit()
-
 
     # Fill in defaults, convert types:
     args = cast(Args, _args)

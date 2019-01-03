@@ -33,7 +33,7 @@ SUDO_FOR_DOCKER = os.path.exists("/var/run/docker.sock") and not os.access(
 )
 
 
-def docker_runify(args: List[str], env: bool=False) -> List[str]:
+def docker_runify(args: List[str], env: bool = False) -> List[str]:
     """Prepend 'docker run' to a list of arguments."""
     args = ['docker', 'run'] + args
     if SUDO_FOR_DOCKER:
@@ -132,7 +132,9 @@ def run_docker_command(
     }
     dns_args = []
     if "hostname" in pod_info:
-        dns_args.append("--hostname={}".format(cast(str, pod_info["hostname"]).strip()))
+        dns_args.append(
+            "--hostname={}".format(cast(str, pod_info["hostname"]).strip())
+        )
     if "resolv" in pod_info:
         dns_args.extend(parse_resolv_conf(cast(str, pod_info["resolv"])))
 

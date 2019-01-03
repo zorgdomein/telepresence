@@ -22,10 +22,10 @@ from typing import List, Tuple, Union, cast, TYPE_CHECKING
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
-
 if TYPE_CHECKING:
     from telepresence import command_cli, cli
     from telepresence.runner import Runner
+
 
 def kubectl_or_oc(server: str) -> str:
     """
@@ -69,7 +69,9 @@ def _parse_version(version: str) -> Tuple[int, int, int]:
 class KubeInfo(object):
     """Record the local machine Kubernetes configuration"""
 
-    def __init__(self, runner: 'Runner', args: Union['command_cli.Args', 'cli.Args']) -> None:
+    def __init__(
+        self, runner: 'Runner', args: Union['command_cli.Args', 'cli.Args']
+    ) -> None:
         span = runner.span()
         # We don't quite know yet if we want kubectl or oc (if someone has both
         # it depends on the context), so until we know the context just guess.

@@ -94,7 +94,7 @@ class Cache(object):
             self.clear()
             self["created"] = now
 
-    def lookup(self, key: Any, function: Callable[[],Any]) -> Any:
+    def lookup(self, key: Any, function: Callable[[], Any]) -> Any:
         """
         Retrieve the value for the associated key. If the value is not already
         cached, call function with no arguments to compute the value and cache

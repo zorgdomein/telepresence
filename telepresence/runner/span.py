@@ -23,7 +23,13 @@ class Span(object):
     emit_summary = False
     depth: int
 
-    def __init__(self, runner: 'Runner', tag: str, parent: Optional['Span'], verbose: bool = True):
+    def __init__(
+        self,
+        runner: 'Runner',
+        tag: str,
+        parent: Optional['Span'],
+        verbose: bool = True
+    ):
         self.runner = runner
         self.tag = tag
         self.parent = parent

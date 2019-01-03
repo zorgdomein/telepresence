@@ -22,8 +22,9 @@ from telepresence import cli
 
 PodInfo = Dict[str, Union[str, Dict[str, str]]]
 
-def get_remote_env(runner: Runner, ssh: SSH, remote_info: RemoteInfo
-                   ) -> Tuple[Dict[str, str], PodInfo]:
+
+def get_remote_env(runner: Runner, ssh: SSH,
+                   remote_info: RemoteInfo) -> Tuple[Dict[str, str], PodInfo]:
     """
     Get the environment variables we want to copy from the remote pod
     """
@@ -37,7 +38,7 @@ def get_remote_env(runner: Runner, ssh: SSH, remote_info: RemoteInfo
             )
         )
         pod_info = loads(json_data)
-        remote_env: Dict[str,str] = pod_info["env"]
+        remote_env: Dict[str, str] = pod_info["env"]
 
         # Tell local process about the remote setup, useful for testing and
         # debugging:
@@ -103,10 +104,10 @@ def write_env_json(runner: Runner, env: Dict[str, str], env_json: str) -> None:
         runner.show("Failed to write environment as JSON: {}".format(exc))
 
 
-def setup(_: Runner, args: cli.Args) -> Tuple[
-        Callable[[Runner, SSH, RemoteInfo], Tuple[Dict[str,str],PodInfo]],
-        Callable[[Runner, Dict[str,str]], None]
-]:
+def setup(
+    _: Runner, args: cli.Args
+) -> Tuple[Callable[[Runner, SSH, RemoteInfo], Tuple[Dict[str, str], PodInfo]],
+           Callable[[Runner, Dict[str, str]], None]]:
     def write_env_files(runner_: Runner, env: Dict[str, str]) -> None:
         if args.env_json:
             write_env_json(runner_, env, args.env_json)

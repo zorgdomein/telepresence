@@ -77,7 +77,9 @@ def terminate_local_process(runner: Runner, process: Popen) -> None:
         kill_process(process)
 
 
-def get_local_env(runner: Runner, env_overrides: Dict[str,str], replace_dns_tools: bool) -> Dict[str,str]:
+def get_local_env(
+    runner: Runner, env_overrides: Dict[str, str], replace_dns_tools: bool
+) -> Dict[str, str]:
     env = os.environ.copy()
     env.update(env_overrides)
     env["PROMPT_COMMAND"] = (

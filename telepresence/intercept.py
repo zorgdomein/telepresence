@@ -24,6 +24,7 @@ from telepresence.proxy import get_remote_info
 from telepresence.utilities import find_free_port
 from telepresence.runner import Runner
 
+
 def command(runner: Runner, args: Args) -> None:
     with runner.cleanup_handling(), crash_reporting(runner):
         # Process arguments

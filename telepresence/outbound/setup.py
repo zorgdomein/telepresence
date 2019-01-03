@@ -24,7 +24,6 @@ from telepresence.remote_env import PodInfo
 from .container import SUDO_FOR_DOCKER, run_docker_command
 from .local import launch_inject, launch_vpn
 
-
 Launcher = typing.Callable[[
     Runner,
     RemoteInfo,
@@ -34,6 +33,7 @@ Launcher = typing.Callable[[
     typing.Optional[str],  # mount_dir
     PodInfo
 ], Popen]
+
 
 def check_local_command(runner: Runner, command: str) -> None:
     if runner.depend([command]):
@@ -54,13 +54,9 @@ def setup_inject(runner: Runner, args: cli.Args) -> Launcher:
         )
 
     def launch(
-            runner_: Runner,
-            _remote_info: RemoteInfo,
-            env: typing.Dict[str, str],
-            socks_port: int,
-            _ssh: SSH,
-            _mount_dir: typing.Optional[str],
-            _pod_info: PodInfo
+        runner_: Runner, _remote_info: RemoteInfo, env: typing.Dict[str, str],
+        socks_port: int, _ssh: SSH, _mount_dir: typing.Optional[str],
+        _pod_info: PodInfo
     ) -> Popen:
         return launch_inject(runner_, command, socks_port, env)
 
@@ -90,13 +86,9 @@ def setup_vpn(runner: Runner, args: cli.Args) -> Launcher:
         )
 
     def launch(
-            runner_: Runner,
-            remote_info: RemoteInfo,
-            env: typing.Dict[str, str],
-            _socks_port: int,
-            ssh: SSH,
-            _mount_dir: typing.Optional[str],
-            _pod_info: PodInfo
+        runner_: Runner, remote_info: RemoteInfo, env: typing.Dict[str, str],
+        _socks_port: int, ssh: SSH, _mount_dir: typing.Optional[str],
+        _pod_info: PodInfo
     ) -> Popen:
         return launch_vpn(
             runner_, remote_info, command, args.also_proxy, env, ssh
@@ -117,13 +109,9 @@ def setup_container(runner: Runner, args: cli.Args) -> Launcher:
         )
 
     def launch(
-            runner_: Runner,
-            remote_info: RemoteInfo,
-            env: typing.Dict[str, str],
-            _socks_port: int,
-            ssh: SSH,
-            mount_dir: typing.Optional[str],
-            pod_info: PodInfo
+        runner_: Runner, remote_info: RemoteInfo, env: typing.Dict[str, str],
+        _socks_port: int, ssh: SSH, mount_dir: typing.Optional[str],
+        pod_info: PodInfo
     ) -> Popen:
         assert args.docker_run is not None
         return run_docker_command(

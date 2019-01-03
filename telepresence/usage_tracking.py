@@ -25,8 +25,11 @@ from telepresence import __version__, cli, command_cli
 
 T = TypeVar('T')
 
+
 class Scout:
-    def __init__(self, app: str, version: str, install_id: str, **kwargs: Any) -> None:
+    def __init__(
+        self, app: str, version: str, install_id: str, **kwargs: Any
+    ) -> None:
         self.app = Scout.__not_blank("app", app)
         self.version = Scout.__not_blank("version", version)
         self.install_id = Scout.__not_blank("install_id", install_id)
@@ -126,7 +129,9 @@ def get_numeric_version(version_str: str) -> Tuple[int, ...]:
     return tuple(res)
 
 
-def call_scout(runner: Runner, args: Union[cli.Args, command_cli.Args]) -> None:
+def call_scout(
+    runner: Runner, args: Union[cli.Args, command_cli.Args]
+) -> None:
     config_root = Path(Path.home() / ".config" / "telepresence")
     config_root.mkdir(parents=True, exist_ok=True)
     id_file = Path(config_root / "id")

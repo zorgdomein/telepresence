@@ -103,7 +103,8 @@ def create_new_deployment(
     return deployment_arg, run_id
 
 
-def _split_deployment_container(deployment_arg: str) -> Tuple[str, Optional[str]]:
+def _split_deployment_container(deployment_arg: str
+                                ) -> Tuple[str, Optional[str]]:
     deployment, *_container = deployment_arg.split(":", 1)
     if _container:
         container: Optional[str] = _container[0]

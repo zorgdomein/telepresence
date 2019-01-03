@@ -18,6 +18,7 @@ from typing import Any
 
 from .runner import Runner
 
+
 class DumbHandler(BaseHTTPRequestHandler):
     """
     HTTP handler that returns success for any HEAD request
