@@ -11,7 +11,9 @@ TELEPROXY_BASE = "https://s3.amazonaws.com/datawire-static-files/teleproxy/"
 TELEPROXY_VERSION = "0.3.6"
 
 
-def retrieve_teleproxy(version, go_os, go_arch, output):
+def retrieve_teleproxy(
+    version: str, go_os: str, go_arch: str, output: Path
+) -> None:
     """
     Fetch externally-built teleproxy binary
     """
@@ -31,7 +33,7 @@ def retrieve_teleproxy(version, go_os, go_arch, output):
     print("Downloaded {}".format(output))
 
 
-def main():
+def main() -> None:
     """
     Set things up then call the code that retrieves binaries
     """

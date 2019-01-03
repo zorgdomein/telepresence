@@ -30,7 +30,7 @@ THIS_DIRECTORY = Path(__file__).absolute().resolve().parent
 DIST = THIS_DIRECTORY.parent / "dist"
 
 
-def show_banner(text, char="=", width=79):
+def show_banner(text: str, char: str = "=", width: int = 79) -> None:
     """
     Make it easy to show what's going on
     """
@@ -90,7 +90,7 @@ def build_package(
     return rel_package
 
 
-def test_package(image: str, package: Path, install_cmd: str):
+def test_package(image: str, package: Path, install_cmd: str) -> None:
     """
     Test a package can be installed and Telepresence run.
     """
@@ -112,7 +112,7 @@ def test_package(image: str, package: Path, install_cmd: str):
     con.execute_sh(teleproxy_smoke_test)
 
 
-def get_upload_commands(system, release, package):
+def get_upload_commands(system: str, release: str, package: Path) -> List[str]:
     """Returns the required package_cloud commands to upload this package"""
     repos = ["datawireio/stable", "datawireio/telepresence"]
     res = []
@@ -125,7 +125,7 @@ def get_upload_commands(system, release, package):
     return res
 
 
-def main(version):
+def main(version: str) -> None:
     """Create Linux packages"""
     show_banner("Building packages...")
     con = prep_to_build()
@@ -133,10 +133,10 @@ def main(version):
     for system, release, package_type, dependencies, install_cmd in distros:
         name = "{}-{}".format(system, release)
         show_banner("Build {}".format(name))
-        rel_package = build_package(
+        _rel_package = build_package(
             con, name, version, dependencies, package_type
         )
-        package = DIST / rel_package
+        package = DIST / _rel_package
         show_banner("Test {}".format(name))
         image = "{}:{}".format(system, release)
         test_package(image, package, install_cmd)

@@ -95,7 +95,7 @@ def parse_args(
         name: str, *args: object, **kwargs: object
     ) -> argparse.ArgumentParser:
         available_commands.append(name)
-        return subparsers.add_parser(name, *args, **kwargs)
+        return subparsers.add_parser(name, *args, **kwargs)  # type: ignore
 
     proxy_desc = "Start or stop the Telepresence proxy pod."
     proxy_parser = add_command(

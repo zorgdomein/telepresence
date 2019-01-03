@@ -330,7 +330,7 @@ class Runner(object):
         self, track: int, msg1: str, msg2: str,
         out_cb: typing.Callable[[typing.Optional[str]], None],
         err_cb: typing.Callable[[typing.Optional[str]], None],
-        args: typing.List[str], **kwargs: object
+        args: typing.List[str], **kwargs: typing.Any
     ) -> None:
         """Run a command synchronously"""
         self.output.write("[{}] {}: {}".format(track, msg1, str_command(args)))
@@ -386,7 +386,7 @@ class Runner(object):
         while not capture or capture[-1] is not None:
             sleep(0.1)
         del capture[-1]
-        output = "".join(capture).strip()
+        output = "".join(capture).strip()  # type: ignore
         if cpe_exc:
             raise CalledProcessError(cpe_exc.returncode, cpe_exc.cmd, output)
         return output

@@ -68,7 +68,7 @@ def main() -> None:
         wait()
 
 
-def proxy(config: dict) -> typing.NoReturn:
+def proxy(config: typing.Dict[str, typing.Any]) -> typing.NoReturn:
     """Start sshuttle proxy to Kubernetes."""
     cidrs = config["cidrs"]
     expose_ports = config["expose_ports"]

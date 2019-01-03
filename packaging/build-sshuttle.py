@@ -16,7 +16,7 @@ from subprocess import check_call, check_output
 from tempfile import TemporaryDirectory
 
 
-def build_sshuttle(output: Path):
+def build_sshuttle(output: Path) -> None:
     """
     Build an sshuttle-telepresence executable using Pex
     """
@@ -56,7 +56,7 @@ def build_sshuttle(output: Path):
     print("Built {}".format(output))
 
 
-def main():
+def main() -> None:
     """
     Set things up then call the code that builds the executable.
     """

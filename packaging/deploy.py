@@ -23,6 +23,7 @@ from pathlib import Path
 from shutil import rmtree
 import subprocess
 import tarfile
+from typing import Any, Optional, List
 
 import package_linux
 from container import Container
@@ -32,7 +33,7 @@ DIST = PROJECT / "dist"
 VENV_BIN = PROJECT / "virtualenv" / "bin"
 
 
-def get_version():
+def get_version() -> str:
     """Retrieve the current version number in the standard Python way"""
     cmd = ["python3", "-Wignore", "setup.py", "--version"]
     version_bytes = subprocess.check_output(cmd, cwd=str(PROJECT))
@@ -69,7 +70,9 @@ aws s3api put-object \\
 """
 
 
-def emit_release_info(version, notices=None):
+def emit_release_info(
+    version: str, notices: Optional[List[Any]] = None
+) -> None:
     """Generate files in dist that handle scout and release info"""
     executable_path = DIST / "telepresence"
     sshuttle_executable_path = DIST / "sshuttle-telepresence"
@@ -97,7 +100,7 @@ def emit_release_info(version, notices=None):
         out.write(_S3_RELEASE.format(**locals()))
 
 
-def emit_announcement(version):
+def emit_announcement(version: str) -> None:
     """Extract the latest changelog entry as a release announcement."""
     changelog = PROJECT / "docs" / "reference" / "changelog.md"
     announcement = DIST / "announcement.md"
@@ -121,7 +124,7 @@ def emit_announcement(version):
             )
 
 
-def emit_machinery():
+def emit_machinery() -> None:
     """Copy scripts and data used by the release process"""
     machinery = [
         PROJECT / "packaging" / "homebrew-package.sh",
@@ -134,7 +137,7 @@ def emit_machinery():
         dest.chmod(item.stat().st_mode)
 
 
-def build_executables():
+def build_executables() -> None:
     """Build Telepresence binaries in Docker and copy them to dist"""
     con = Container("python:3.6-alpine")
     con.execute_sh("apk update -q")
@@ -154,7 +157,7 @@ def build_executables():
     con.copy_from("/source/dist/teleproxy-linux-amd64", str(DIST))
 
 
-def make_archive(version):
+def make_archive(version: str) -> None:
     """
     Make a Mac-specific tar archive of the appropriate executables in dist.
     """
@@ -173,7 +176,7 @@ def make_archive(version):
             tf.addfile(tf.gettarinfo(arcname=dst, fileobj=fp), fp)
 
 
-def main():
+def main() -> None:
     """
     Perform the steps required to build and deploy, but not release, a new
     version of Telepresence.

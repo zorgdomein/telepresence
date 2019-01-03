@@ -12,7 +12,9 @@ from zipapp import create_archive
 from zipfile import ZIP_DEFLATED, ZipFile
 
 
-def make_compressed_zipapp(source: Path, output: Path, main_function: str):
+def make_compressed_zipapp(
+    source: Path, output: Path, main_function: str
+) -> None:
     """
     Make an executable compressed zipfile from Python code
     """
@@ -34,7 +36,7 @@ def make_compressed_zipapp(source: Path, output: Path, main_function: str):
     output.chmod(0o755)  # Seems to default to 744 on CircleCI
 
 
-def build_telepresence(project: Path, output: Path):
+def build_telepresence(project: Path, output: Path) -> None:
     """
     Build a telepresence executable zipfile
     """
@@ -51,7 +53,7 @@ def build_telepresence(project: Path, output: Path):
     print("Built {}".format(output))
 
 
-def main():
+def main() -> None:
     """
     Set things up then call the code that builds the executable.
     """

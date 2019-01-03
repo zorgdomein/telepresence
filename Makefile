@@ -103,7 +103,7 @@ lint: virtualenv  ## Run the linters used by CI (implies 'virtualenv')
 	$(VIRTUALENV) yapf -dr telepresence packaging
 	$(VIRTUALENV) flake8 --isolated local-docker k8s-proxy telepresence setup.py packaging
 	$(VIRTUALENV) mypy --strict telepresence local-docker/entrypoint.py packaging/*.py
-	$(VIRTUALENV) mypy --strict --ignore-missing-imports k8s-proxy
+	$(VIRTUALENV) mypy --strict-optional --ignore-missing-imports k8s-proxy
 	$(VIRTUALENV) telepresence --help
 .PHONY: lint
 

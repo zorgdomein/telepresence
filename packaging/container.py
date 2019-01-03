@@ -40,7 +40,7 @@ class Container(object):
     FIXME: This should be a context manager
     """
 
-    def __init__(self, image: str, verbose=True) -> None:
+    def __init__(self, image: str, verbose: bool = True) -> None:
         self.image = image
         self.verbose = verbose
         self.container = "CNTNR"
@@ -49,10 +49,10 @@ class Container(object):
         res = self._run(docker + [self.image] + infinite)
         self.container = res.strip()
 
-    def __del__(self):
+    def __del__(self) -> None:
         self._run(["docker", "kill", self.container])
 
-    def _run(self, *args, **kwargs) -> str:
+    def _run(self, *args: List[str], **kwargs: object) -> str:
         "Run a command"
         if self.verbose:
             cmd = str_command(args[0])
@@ -60,7 +60,7 @@ class Container(object):
                 cmd = cmd.replace(self.container, "CNTNR")
             print("+ {}".format(cmd))
         try:
-            res_bytes = check_output(*args, **kwargs)
+            res_bytes = check_output(*args, **kwargs)  # type: ignore
         except CalledProcessError as exc:
             print(str(exc.output, "utf-8").rstrip())
             raise
@@ -86,12 +86,12 @@ class Container(object):
         cmd = ["docker", "exec", self.container, "sh", "-c", command]
         return self._run(cmd)
 
-    def copy_from(self, source: str, target: str):
+    def copy_from(self, source: str, target: str) -> None:
         "Copy files from the container"
         args = ["docker", "cp", "{}:{}".format(self.container, source), target]
         self._run(args)
 
-    def copy_to(self, source: str, target: str):
+    def copy_to(self, source: str, target: str) -> None:
         "Copy files to the container"
         args = ["docker", "cp", source, "{}:{}".format(self.container, target)]
         self._run(args)

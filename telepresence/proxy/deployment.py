@@ -15,7 +15,7 @@
 import json
 from copy import deepcopy
 from subprocess import STDOUT, CalledProcessError
-from typing import Any, Dict, Optional, Tuple, List
+from typing import Any, Dict, Optional, Tuple, List, cast
 
 from telepresence.cli import PortMapping
 from telepresence.runner import Runner
@@ -173,8 +173,8 @@ def supplant_deployment(
         id=run_id,
         max_width=(50 - (len(run_id) + 1))
     )
-    new_deployment_json["metadata"]["name"
-                                    ] = new_deployment_name  # type: ignore
+    cast(Dict[str, object],
+         new_deployment_json["metadata"])["name"] = new_deployment_name
 
     def resize_original(replicas: int) -> None:
         """Resize the original deployment (kubectl scale)"""
