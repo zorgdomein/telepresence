@@ -11,8 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import argparse
 from subprocess import CalledProcessError
+from typing import Callable, NamedTuple, Optional, Tuple, Type
 
+from telepresence.cli import PortMapping
 from telepresence.runner import Runner
 from telepresence.utilities import get_alternate_nameserver
 
@@ -21,6 +24,16 @@ from .deployment import (
     supplant_deployment, swap_deployment_openshift
 )
 from .remote import RemoteInfo, get_remote_info
+
+ProxyIntent = NamedTuple(
+    "ProxyIntent", [
+        ("name", str),
+        ("container", str),
+        ("expose", PortMapping),
+        ("custom_nameserver", Optional[str]),
+        ("service_account", str),
+    ]
+)
 
 
 def _dc_exists(runner: Runner, name: str) -> bool:
@@ -47,7 +60,8 @@ def _dc_exists(runner: Runner, name: str) -> bool:
     return False
 
 
-def setup(runner: Runner, args):
+def setup(runner: Runner,
+          args: argparse.Namespace) -> Callable[[Runner], RemoteInfo]:
     """
     Determine how the user wants to set up the proxy in the cluster.
     """
@@ -76,25 +90,24 @@ def setup(runner: Runner, args):
     if args.deployment is not None:
         # This implies --deployment
         if _dc_exists(runner, args.deployment_arg):
-            operation = existing_deployment_openshift
-            deployment_type = "deploymentconfig"
+            operationType = ExistingDC  # type: Type[ProxyOperation]
         else:
-            operation = existing_deployment
-            deployment_type = "deployment"
+            operationType = ExistingDeploy
 
     if args.new_deployment is not None:
         # This implies --new-deployment
-        deployment_type = "deployment"
-        operation = create_new_deployment
+        operationType = New
 
     if args.swap_deployment is not None:
         # This implies --swap-deployment
         if _dc_exists(runner, args.deployment_arg):
-            operation = swap_deployment_openshift
-            deployment_type = "deploymentconfig"
+            operationType = SwapDC
         else:
-            operation = supplant_deployment
-            deployment_type = "deployment"
+            operationType = SwapDeploy
+
+    name, container = args.deployment_arg, ""
+    if ":" in name:
+        name, container = name.split(":", 1)
 
     # minikube/minishift break DNS because DNS gets captured, sent to minikube,
     # which sends it back to the DNS server set by host, resulting in a DNS
@@ -116,17 +129,86 @@ def setup(runner: Runner, args):
                 "Failed to find a fallback nameserver: {}".format(exc)
             )
 
-    def start_proxy(runner_: Runner) -> RemoteInfo:
-        tel_deployment, run_id = operation(
-            runner_, args.deployment_arg, args.expose, custom_nameserver,
-            args.service_account
+    intent = ProxyIntent(
+        name,
+        container,
+        args.expose,
+        custom_nameserver,
+        args.service_account or "",
+    )
+    operation = operationType(intent)
+
+    operation.prepare(runner)
+
+    return operation.act
+
+
+LegacyOperation = Callable[[Runner, str, PortMapping, Optional[str], str],
+                           Tuple[str, Optional[str]]]
+
+
+class ProxyOperation:
+    def __init__(self, intent: ProxyIntent) -> None:
+        self.intent = intent
+
+    def prepare(self, runner: Runner) -> None:
+        pass
+
+    def act(self, _: Runner) -> RemoteInfo:
+        raise NotImplementedError()
+
+    def _legacy(
+        self,
+        runner: Runner,
+        legacy_op: LegacyOperation,
+        deployment_type: str,
+    ) -> RemoteInfo:
+        deployment_arg = self.intent.name
+        if self.intent.container:
+            deployment_arg += ":" + self.intent.container
+
+        tel_deployment, run_id = legacy_op(
+            runner,
+            deployment_arg,
+            self.intent.expose,
+            self.intent.custom_nameserver,
+            self.intent.service_account,
         )
+
         remote_info = get_remote_info(
             runner,
             tel_deployment,
             deployment_type,
             run_id=run_id,
         )
+
         return remote_info
 
-    return start_proxy
+
+class New(ProxyOperation):
+    def act(self, runner: Runner) -> RemoteInfo:
+        return self._legacy(runner, create_new_deployment, "deployment")
+
+
+class ExistingDeploy(ProxyOperation):
+    def act(self, runner: Runner) -> RemoteInfo:
+        return self._legacy(runner, existing_deployment, "deployment")
+
+
+class ExistingDC(ProxyOperation):
+    def act(self, runner: Runner) -> RemoteInfo:
+        return self._legacy(
+            runner, existing_deployment_openshift, "deploymentconfig"
+        )
+
+
+class SwapDeploy(ProxyOperation):
+    def act(self, runner: Runner) -> RemoteInfo:
+        return self._legacy(runner, supplant_deployment, "deployment")
+
+
+class SwapDC(ProxyOperation):
+    def act(self, runner: Runner) -> RemoteInfo:
+        return self._legacy(
+            runner, swap_deployment_openshift, "deploymentconfig"
+        )
