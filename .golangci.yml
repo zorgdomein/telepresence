@@ -31,6 +31,7 @@ linters-settings:
     packages-with-error-message:
       - os/exec:                    "Use `github.com/datawire/dlib/dexec` instead of `os/exec`"
       - github.com/golang/protobuf: "Use `google.golang.org/protobuf` instead of `github.com/golang/protobuf`"
+      - io/ioutil:                  "`io/ioutil` is deprecated in Go 1.16, use `io` or `os` instead"
 
   gocyclo:
     min-complexity: 35

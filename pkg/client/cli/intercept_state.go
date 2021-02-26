@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"regexp"
@@ -306,7 +305,7 @@ func (is *interceptState) createRequest() (*connector.CreateInterceptRequest, er
 
 		if doMount {
 			if mountPoint == "" {
-				if mountPoint, err = ioutil.TempDir("", "telfs-"); err != nil {
+				if mountPoint, err = os.MkdirTemp("", "telfs-"); err != nil {
 					return nil, err
 				}
 			} else {
@@ -505,7 +504,7 @@ func (is *interceptState) writeEnvJSON() error {
 		// Creating JSON from a map[string]string should never fail
 		panic(err)
 	}
-	return ioutil.WriteFile(is.envJSON, data, 0644)
+	return os.WriteFile(is.envJSON, data, 0644)
 }
 
 var hostRx = regexp.MustCompile(`^[a-zA-Z0-9](?:[a-zA-Z0-9\-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9\-]*[a-zA-Z0-9])?)*$`)

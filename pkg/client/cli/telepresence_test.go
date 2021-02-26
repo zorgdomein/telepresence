@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -58,7 +57,7 @@ func (ts *telepresenceSuite) SetupSuite() {
 	os.Setenv("PATH", toolbindir+":"+os.Getenv("PATH"))
 
 	// Remove very verbose output from DTEST initialization
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 
 	ts.testVersion = fmt.Sprintf("v2.0.0-gotest.%d", os.Getpid())
 	ts.namespace = fmt.Sprintf("telepresence-%d", os.Getpid())
@@ -323,7 +322,7 @@ func (cs *connectedSuite) TestC_ProxiesOutboundTraffic() {
 				}
 				defer resp.Body.Close()
 				cs.T().Logf("status code: %v", resp.StatusCode)
-				body, err := ioutil.ReadAll(resp.Body)
+				body, err := io.ReadAll(resp.Body)
 				if err != nil {
 					cs.T().Log(err)
 					return false
@@ -617,7 +616,7 @@ func (is *interceptedSuite) TestA_VerifyingResponsesFromInterceptor() {
 				}
 				defer resp.Body.Close()
 				is.T().Logf("status code: %v", resp.StatusCode)
-				body, err := ioutil.ReadAll(resp.Body)
+				body, err := io.ReadAll(resp.Body)
 				if err != nil {
 					is.T().Log(err)
 					return false
