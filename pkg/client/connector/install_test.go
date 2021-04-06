@@ -287,10 +287,10 @@ func TestAddAgentToDeployment(t *testing.T) {
 		}
 		tcName := strings.TrimSuffix(fi.Name(), ".input.yaml")
 
-		loadFile := func(filename string) (*kates.Deployment, *kates.Service, error) {
+		loadFile := func(filename string) (*kates.Deployment, *kates.Service, string, error) {
 			tmpl, err := template.ParseFiles(filepath.Join("testdata/addAgentToDeployment", filename))
 			if err != nil {
-				return nil, nil, fmt.Errorf("read template: %s: %w", filename, err)
+				return nil, nil, "", fmt.Errorf("read template: %s: %w", filename, err)
 			}
 
 			var buff bytes.Buffer
@@ -298,37 +298,32 @@ func TestAddAgentToDeployment(t *testing.T) {
 				"Version": strings.TrimPrefix(testVersion, "v"),
 			})
 			if err != nil {
-				return nil, nil, fmt.Errorf("execute template: %s: %w", filename, err)
+				return nil, nil, "", fmt.Errorf("execute template: %s: %w", filename, err)
 			}
 
 			var dat struct {
-				Deployment *kates.Deployment `json:"deployment"`
-				Service    *kates.Service    `json:"service"`
+				Deployment    *kates.Deployment `json:"deployment"`
+				Service       *kates.Service    `json:"service"`
+				InterceptPort string            `json:"interceptPort"`
 			}
 			if err := yaml.Unmarshal(buff.Bytes(), &dat); err != nil {
-				return nil, nil, fmt.Errorf("parse yaml: %s: %w", filename, err)
+				return nil, nil, "", fmt.Errorf("parse yaml: %s: %w", filename, err)
 			}
 
-			return dat.Deployment, dat.Service, nil
+			return dat.Deployment, dat.Service, dat.InterceptPort, nil
 		}
 
 		var tc testcase
 		var err error
 
-		tc.InputDeployment, tc.InputService, err = loadFile(tcName + ".input.yaml")
+		tc.InputDeployment, tc.InputService, tc.InputPortName, err = loadFile(tcName + ".input.yaml")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		tc.OutputDeployment, tc.OutputService, err = loadFile(tcName + ".output.yaml")
+		tc.OutputDeployment, tc.OutputService, _, err = loadFile(tcName + ".output.yaml")
 		if err != nil {
 			t.Fatal(err)
-		}
-
-		// If it is a test case for a service with multiple ports,
-		// we need to specify the name of the port we want to intercept
-		if strings.Contains(tcName, "mp-tc") {
-			tc.InputPortName = "https"
 		}
 
 		testcases[tcName] = tc
@@ -417,10 +412,10 @@ func TestAddAgentToReplicaSet(t *testing.T) {
 		}
 		tcName := strings.TrimSuffix(fi.Name(), ".input.yaml")
 
-		loadFile := func(filename string) (*kates.ReplicaSet, *kates.Service, error) {
+		loadFile := func(filename string) (*kates.ReplicaSet, *kates.Service, string, error) {
 			tmpl, err := template.ParseFiles(filepath.Join("testdata/addAgentToReplicaSet", filename))
 			if err != nil {
-				return nil, nil, fmt.Errorf("read template: %s: %w", filename, err)
+				return nil, nil, "", fmt.Errorf("read template: %s: %w", filename, err)
 			}
 
 			var buff bytes.Buffer
@@ -428,37 +423,32 @@ func TestAddAgentToReplicaSet(t *testing.T) {
 				"Version": strings.TrimPrefix(testVersion, "v"),
 			})
 			if err != nil {
-				return nil, nil, fmt.Errorf("execute template: %s: %w", filename, err)
+				return nil, nil, "", fmt.Errorf("execute template: %s: %w", filename, err)
 			}
 
 			var dat struct {
-				ReplicaSet *kates.ReplicaSet `json:"replicaset"`
-				Service    *kates.Service    `json:"service"`
+				ReplicaSet    *kates.ReplicaSet `json:"replicaset"`
+				Service       *kates.Service    `json:"service"`
+				InterceptPort string            `json:"interceptPort"`
 			}
 			if err := yaml.Unmarshal(buff.Bytes(), &dat); err != nil {
-				return nil, nil, fmt.Errorf("parse yaml: %s: %w", filename, err)
+				return nil, nil, "", fmt.Errorf("parse yaml: %s: %w", filename, err)
 			}
 
-			return dat.ReplicaSet, dat.Service, nil
+			return dat.ReplicaSet, dat.Service, dat.InterceptPort, nil
 		}
 
 		var tc testcase
 		var err error
 
-		tc.InputReplicaSet, tc.InputService, err = loadFile(tcName + ".input.yaml")
+		tc.InputReplicaSet, tc.InputService, tc.InputPortName, err = loadFile(tcName + ".input.yaml")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		tc.OutputReplicaSet, tc.OutputService, err = loadFile(tcName + ".output.yaml")
+		tc.OutputReplicaSet, tc.OutputService, _, err = loadFile(tcName + ".output.yaml")
 		if err != nil {
 			t.Fatal(err)
-		}
-
-		// If it is a test case for a service with multiple ports,
-		// we need to specify the name of the port we want to intercept
-		if strings.Contains(tcName, "mp-") {
-			tc.InputPortName = "https"
 		}
 
 		testcases[tcName] = tc
@@ -546,10 +536,10 @@ func TestAddAgentToStatefulSet(t *testing.T) {
 		}
 		tcName := strings.TrimSuffix(fi.Name(), ".input.yaml")
 
-		loadFile := func(filename string) (*kates.StatefulSet, *kates.Service, error) {
+		loadFile := func(filename string) (*kates.StatefulSet, *kates.Service, string, error) {
 			tmpl, err := template.ParseFiles(filepath.Join("testdata/addAgentToStatefulSet", filename))
 			if err != nil {
-				return nil, nil, fmt.Errorf("read template: %s: %w", filename, err)
+				return nil, nil, "", fmt.Errorf("read template: %s: %w", filename, err)
 			}
 
 			var buff bytes.Buffer
@@ -557,37 +547,32 @@ func TestAddAgentToStatefulSet(t *testing.T) {
 				"Version": strings.TrimPrefix(testVersion, "v"),
 			})
 			if err != nil {
-				return nil, nil, fmt.Errorf("execute template: %s: %w", filename, err)
+				return nil, nil, "", fmt.Errorf("execute template: %s: %w", filename, err)
 			}
 
 			var dat struct {
-				StatefulSet *kates.StatefulSet `json:"statefulset"`
-				Service     *kates.Service     `json:"service"`
+				StatefulSet   *kates.StatefulSet `json:"statefulset"`
+				Service       *kates.Service     `json:"service"`
+				InterceptPort string             `json:"interceptPort"`
 			}
 			if err := yaml.Unmarshal(buff.Bytes(), &dat); err != nil {
-				return nil, nil, fmt.Errorf("parse yaml: %s: %w", filename, err)
+				return nil, nil, "", fmt.Errorf("parse yaml: %s: %w", filename, err)
 			}
 
-			return dat.StatefulSet, dat.Service, nil
+			return dat.StatefulSet, dat.Service, dat.InterceptPort, nil
 		}
 
 		var tc testcase
 		var err error
 
-		tc.InputStatefulSet, tc.InputService, err = loadFile(tcName + ".input.yaml")
+		tc.InputStatefulSet, tc.InputService, tc.InputPortName, err = loadFile(tcName + ".input.yaml")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		tc.OutputStatefulSet, tc.OutputService, err = loadFile(tcName + ".output.yaml")
+		tc.OutputStatefulSet, tc.OutputService, _, err = loadFile(tcName + ".output.yaml")
 		if err != nil {
 			t.Fatal(err)
-		}
-
-		// If it is a test case for a service with multiple ports,
-		// we need to specify the name of the port we want to intercept
-		if strings.Contains(tcName, "mp-") {
-			tc.InputPortName = "https"
 		}
 
 		testcases[tcName] = tc
