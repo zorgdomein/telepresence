@@ -320,7 +320,7 @@ func (ki *installer) findMatchingServices(portNameOrNumber, svcName, namespace s
 	return matching
 }
 
-// findMatchingPort find the matching container associated with portNameOrNumber
+// findMatchingPort finds the matching container associated with portNameOrNumber
 // in the given service.
 func findMatchingPort(obj kates.Object, portNameOrNumber string, svc *kates.Service) (
 	sPort *kates.ServicePort,
