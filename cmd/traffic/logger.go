@@ -16,7 +16,7 @@ func makeBaseLogger() dlog.Logger {
 		FullTimestamp:   true,
 	}
 	logrusLogger.SetFormatter(logrusFormatter)
-	logrusLogger.SetReportCaller(false)
+	logrusLogger.SetReportCaller(true)
 
 	const defaultLogLevel = logrus.InfoLevel
 

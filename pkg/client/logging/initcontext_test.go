@@ -134,6 +134,7 @@ func TestInitContext(t *testing.T) {
 
 		c, err = InitContext(ctx, logName)
 		loggerForTest.AddHook(&dtimeHook{})
+		loggerForTest.SetReportCaller(false)
 		check.NoError(err)
 		check.NotNil(c)
 		defer closeLog(t)
