@@ -42,3 +42,5 @@ replace (
 )
 
 replace github.com/telepresenceio/telepresence/rpc/v2 => ./rpc
+
+replace github.com/datawire/dlib => ../../datawire/dlib
