@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/http"
+	"net/http/pprof"
 	"os"
 	"path/filepath"
 	"sort"
@@ -584,6 +586,22 @@ func run(c context.Context) error {
 			Handler: svc,
 		}
 		return sc.Serve(c, grpcListener)
+	})
+
+	g.Go("httpd", func(c context.Context) error {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "Hello World from: %s\n", r.URL.Path)
+		})
+		mux.HandleFunc("/debug/pprof/", pprof.Index)
+		mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+		sc := &dhttp.ServerConfig{
+			Handler: mux,
+		}
+		return sc.ListenAndServe(c, "localhost:6061")
 	})
 
 	g.Go("background-init", func(c context.Context) error {

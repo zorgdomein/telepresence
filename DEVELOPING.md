@@ -240,3 +240,30 @@ To fix them, ensure you're running a recent version of `bash`. In MacOS this can
 ```bash
 brew install bash
 ```
+
+## Profiling telepresence
+
+Sometimes things are slow instead of fast.
+When that happens, you might want to use `go tool pprof` to help diagnose performance issues.
+Currently, building the `josecv/flame-graph` branch will result in builds of the root daemon, user daemon, and traffic manager that have pprof endpoints enabled. **TODO** how should enablement of these pprof endpoints be controlled so that `josecv/flame-graph` can be merged into the release branch?
+
+Once you have a build with pprof endpoints enabled, profiling telepresence is simple:
+
+```
+telepresence connect
+
+# To profile the traffic manager
+go tool pprof -http=":8000" "traffic-manager.ambassador:8081"
+
+# To profile the user daemon
+go tool pprof -http=":8000" "localhost:6061"
+
+# To profile the root daemon
+go tool pprof -http=":8000" "localhost:6062"
+```
+
+Whichever component you're profiling, make sure to generate some load while `go tool pprof` is running.
+After 30s of capturing the profile, `go tool pprof` will open a browser window displaying the results.
+You can access different visualizations through the top left `VIEW` menu in the pprof web page -- the `Flame Graph` visualization is a good starting point for performance issues.
+
+These are just the basics of profiling telepresence, you can learn more about `go tool pprof` by reading the [docs](https://golang.org/pkg/net/http/pprof/) and [official blog post](https://blog.golang.org/pprof).

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"strings"
 	"time"
@@ -50,15 +51,21 @@ func Main(ctx context.Context, args ...string) error {
 		port := env.ServerPort
 
 		grpcHandler := grpc.NewServer()
-		httpHandler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "Hello World from: %s\n", r.URL.Path)
-		}))
+		})
+		mux.HandleFunc("/debug/pprof/", pprof.Index)
+		mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 		sc := &dhttp.ServerConfig{
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.ProtoMajor == 2 && strings.HasPrefix(r.Header.Get("Content-Type"), "application/grpc") {
 					grpcHandler.ServeHTTP(w, r)
 				} else {
-					httpHandler.ServeHTTP(w, r)
+					mux.ServeHTTP(w, r)
 				}
 			}),
 		}
