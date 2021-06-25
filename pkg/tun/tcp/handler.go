@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"math"
 	"math/rand"
+	"runtime/debug"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -185,6 +186,7 @@ func (h *handler) HandlePacket(ctx context.Context, pkt Packet) {
 }
 
 func (h *handler) Close(ctx context.Context) {
+	dlog.Debugf(ctx, "Asked to close")
 	if h.state() == stateEstablished || h.state() == stateSynReceived {
 		atomic.StoreInt32(&h.isClosing, 1)
 		// Wait for the fromMgr queue to drain before sending a FIN
@@ -196,6 +198,7 @@ func (h *handler) Close(ctx context.Context) {
 }
 
 func (h *handler) Start(ctx context.Context) {
+	debug.PrintStack()
 	go h.processResends(ctx)
 	go func() {
 		defer func() {

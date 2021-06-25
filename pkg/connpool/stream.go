@@ -83,6 +83,7 @@ func (s *Stream) handleControl(ctx context.Context, ctrl Control, pool *Pool) {
 		return
 	}
 	if conn != nil {
+		dlog.Debugf(ctx, "%s dispatched to handler of type %T", ctrl.Code(), conn)
 		conn.HandleMessage(ctx, ctrl)
 		return
 	}

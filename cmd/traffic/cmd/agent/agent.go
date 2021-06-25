@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
+	"net/http/pprof"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,6 +14,7 @@ import (
 	"github.com/sethvargo/go-envconfig"
 
 	"github.com/datawire/dlib/dgroup"
+	"github.com/datawire/dlib/dhttp"
 	"github.com/datawire/dlib/dlog"
 	rpc "github.com/telepresenceio/telepresence/rpc/v2/manager"
 	"github.com/telepresenceio/telepresence/v2/pkg/connpool"
@@ -252,6 +255,22 @@ func Main(ctx context.Context, args ...string) error {
 		forwarderChan <- forwarder
 
 		return forwarder.Serve(ctx)
+	})
+
+	g.Go("pprof", func(c context.Context) error {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "Hello World from: %s\n", r.URL.Path)
+		})
+		mux.HandleFunc("/debug/pprof/", pprof.Index)
+		mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+		sc := &dhttp.ServerConfig{
+			Handler: mux,
+		}
+		return sc.ListenAndServe(c, ":6063")
 	})
 
 	// Talk to the Traffic Manager
