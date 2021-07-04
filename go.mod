@@ -43,4 +43,4 @@ replace (
 replace github.com/telepresenceio/telepresence/rpc/v2 => ./rpc
 
 // https://github.com/grpc/grpc-go/pull/4567
-replace google.golang.org/grpc v1.38.0 => github.com/datawire/grpc-go v1.38.0-dev.0.20210626184227-5ef87f395316
+replace google.golang.org/grpc v1.38.0 => github.com/datawire/grpc-go v1.34.0
