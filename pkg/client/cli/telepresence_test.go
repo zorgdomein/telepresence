@@ -445,7 +445,8 @@ func (cs *connectedSuite) SetupSuite() {
 logLevels:
   rootDaemon: debug
 images:
-  registry: %s
+  registry: %[1]s
+  webhookRegistry: %[1]s
 timeouts:
   intercept: 20s
   trafficManagerAPI: 120s
@@ -1483,7 +1484,7 @@ func (ts *telepresenceSuite) waitForService(c context.Context, name string, port
 		time.Sleep(time.Second)
 		err := ts.kubectl(c, "run", containerName, "--context", "default", "--rm", "-it",
 			"--image=docker.io/pstauffer/curl", "--restart=Never", "--",
-			"curl", "--silent", "--output", "/dev/null",
+			"curl",
 			fmt.Sprintf("http://%s.%s:%d", name, ts.namespace, port),
 		)
 		if err == nil {
