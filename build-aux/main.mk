@@ -200,8 +200,8 @@ format: $(tools/golangci-lint) $(tools/protolint) ## (QA) Automatically fix lint
 	$(tools/protolint) lint --fix rpc || true
 
 .PHONY: check
-check: $(tools/ko) $(tools/helm) pkg/install/helm/telepresence-chart.tgz ## (QA) Run the test suite
-	TELEPRESENCE_MAX_LOGFILES=300 go test -timeout=18m ./...
+check: $(tools/ko) $(tools/helm) ## (QA) Run the test suite
+	TELEPRESENCE_MAX_LOGFILES=300 SYSTEMA_HOST=127.0.0.1 TELEPRESENCE_LOGIN_DOMAIN=127.0.0.1 go test -timeout=18m ./...
 
 .PHONY: _login
 _login:
