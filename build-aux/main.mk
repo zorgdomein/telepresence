@@ -201,6 +201,9 @@ format: $(tools/golangci-lint) $(tools/protolint) ## (QA) Automatically fix lint
 
 .PHONY: check
 check: $(tools/ko) $(tools/helm) ## (QA) Run the test suite
+	# We run the test suite with SYSTEMA_HOST and TELEPRESENCE_LOGIN_DOMAIN set to localhost
+	# since those values are only used for extensions. Therefore, we want to validate that our
+	# tests, and telepresence, run without requiring any outside dependency.
 	TELEPRESENCE_MAX_LOGFILES=300 SYSTEMA_HOST=127.0.0.1 TELEPRESENCE_LOGIN_DOMAIN=127.0.0.1 go test -timeout=18m ./...
 
 .PHONY: _login
