@@ -36,9 +36,9 @@ spec:
           - name: LOG_LEVEL
             value: {{ .Values.logLevel }}
           - name: SYSTEMA_HOST
-            value: app.getambassador.io
+            value: {{ .Values.systemaHost }}
           - name: SYSTEMA_PORT
-            value: "443"
+            value: {{ .Values.systemaPort }}
           - name: CLUSTER_ID
             value: {{ .Values.clusterID }}
           {{- if (and .Values.agentInjector.create .Values.agentInjector.agentImage.registry) }}
