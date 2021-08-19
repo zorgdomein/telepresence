@@ -232,7 +232,15 @@ func (ts *telepresenceSuite) TestA_WithNoDaemonRunning() {
 
 		ctx := dlog.NewTestContext(t, false)
 		registry := dtest.DockerRegistry(ctx)
-		configYml := fmt.Sprintf("logLevels:\n  rootDaemon: debug\nimages:\n  registry: %s\n", registry)
+		configYml := fmt.Sprintf(`
+loglevels:
+  rootDaemon: debug
+images:
+  registry: %[1]s
+  webhookRegistry: %[1]s
+cloud:
+  systemaHost: 127.0.0.1
+`, registry)
 		ctx, err := client.SetConfig(ctx, configDir, configYml)
 		require.NoError(err)
 
@@ -298,7 +306,15 @@ func (ts *telepresenceSuite) TestA_WithNoDaemonRunning() {
 
 		ctx := dlog.NewTestContext(t, false)
 		registry := dtest.DockerRegistry(ctx)
-		configYml := fmt.Sprintf("logLevels:\n  rootDaemon: debug\nimages:\n  registry: %s\n", registry)
+		configYml := fmt.Sprintf(`
+loglevels:
+  rootDaemon: debug
+images:
+  registry: %[1]s
+  webhookRegistry: %[1]s
+cloud:
+  systemaHost: 127.0.0.1
+`, registry)
 		ctx, err = client.SetConfig(ctx, tmpDir, configYml)
 		require.NoError(err)
 
@@ -352,7 +368,15 @@ func (ts *telepresenceSuite) TestA_WithNoDaemonRunning() {
 		// latter that is used in the traffic-manager
 		ctx := dlog.NewTestContext(t, false)
 		registry := dtest.DockerRegistry(ctx)
-		configYml := fmt.Sprintf("images:\n  registry: %s\n  agentImage: notUsed:0.0.1\n  webhookAgentImage: imageFromConfig:0.0.1\n  webhookRegistry: %s", registry, registry)
+		configYml := fmt.Sprintf(`
+images:
+  registry: %[1]s
+  agentImage: notUsed:0.0.1
+  webhookRegistry: %[1]s
+  webhookAgentImage: imageFromConfig:0.0.1
+cloud:
+  systemaHost: 127.0.0.1
+`, registry)
 		ctx, err := client.SetConfig(ctx, configDir, configYml)
 		require.NoError(err)
 
@@ -452,6 +476,8 @@ timeouts:
   trafficManagerAPI: 120s
 grpc:
   maxReceiveSize: 10Mi
+cloud:
+  systemaHost: 127.0.0.1
 `, registry)
 	configYml = strings.TrimSpace(configYml)
 	c, err := client.SetConfig(c, configDir, configYml)
