@@ -17,6 +17,7 @@ import (
 	"github.com/telepresenceio/telepresence/rpc/v2/daemon"
 	"github.com/telepresenceio/telepresence/rpc/v2/manager"
 	"github.com/telepresenceio/telepresence/v2/pkg/client"
+	"github.com/telepresenceio/telepresence/v2/pkg/client/scout"
 	"github.com/telepresenceio/telepresence/v2/pkg/connpool"
 	"github.com/telepresenceio/telepresence/v2/pkg/ipproto"
 	"github.com/telepresenceio/telepresence/v2/pkg/iputil"
@@ -110,9 +111,12 @@ type tunRouter struct {
 
 	// rndSource is the source for the random number generator in the TCP handlers
 	rndSource rand.Source
+
+	// scout is a channel into which telemetry can be written
+	scout chan scout.ScoutReport
 }
 
-func newTunRouter(ctx context.Context) (*tunRouter, error) {
+func newTunRouter(ctx context.Context, scout chan scout.ScoutReport) (*tunRouter, error) {
 	td, err := tun.OpenTun(ctx)
 	if err != nil {
 		return nil, err
@@ -124,6 +128,7 @@ func newTunRouter(ctx context.Context) (*tunRouter, error) {
 		cfgComplete: make(chan struct{}),
 		fragmentMap: make(map[uint16][]*buffer.Data),
 		rndSource:   rand.NewSource(time.Now().UnixNano()),
+		scout:       scout,
 	}, nil
 }
 
@@ -296,8 +301,11 @@ var blockedUDPPorts = map[uint16]bool{
 	139: true, // NETBIOS
 }
 
+//run runs the tunrouter and returns how many bytes it read and wrote.
 func (t *tunRouter) run(c context.Context) error {
 	g := dgroup.NewGroup(c, dgroup.GroupConfig{})
+	bytesRead := uint64(0)
+	bytesWritten := uint64(0)
 
 	// writer
 	g.Go("TUN writer", func(c context.Context) error {
@@ -308,7 +316,8 @@ func (t *tunRouter) run(c context.Context) error {
 				return nil
 			case pkt := <-t.toTunCh:
 				dlog.Debugf(c, "-> TUN %s", pkt)
-				_, err := t.dev.WritePacket(pkt.Data())
+				n, err := t.dev.WritePacket(pkt.Data())
+				atomic.AddUint64(&bytesWritten, uint64(n))
 				pkt.SoftRelease()
 				if err != nil {
 					if atomic.LoadInt32(&t.closing) == 2 || c.Err() != nil {
@@ -367,6 +376,7 @@ func (t *tunRouter) run(c context.Context) error {
 					return fmt.Errorf("read packet error: %w", err)
 				}
 				if n > 0 {
+					atomic.AddUint64(&bytesRead, uint64(n))
 					data.SetLength(n)
 					break
 				}
@@ -375,6 +385,36 @@ func (t *tunRouter) run(c context.Context) error {
 		}
 		return nil
 	})
+
+	// Send scout reports on a timer, and write to the scout channel separately from TUN reader and writer.
+	// We do this because a) we don't want to send a scout report per packet, and b) because the reader and writer
+	// are fairly hot code (since all network traffic flows through them), so having them potentially wait on
+	// a full channel just to report metrics is not the best idea.
+	g.Go("scout reporter", func(c context.Context) error {
+		var curRead, curWritten uint64
+		tick := time.NewTicker(500 * time.Millisecond)
+		for {
+			select {
+			case <-tick.C:
+				newRead := atomic.LoadUint64(&bytesRead)
+				newWritten := atomic.LoadUint64(&bytesWritten)
+				if curRead != newRead || curWritten != newWritten {
+					curRead = newRead
+					curWritten = newWritten
+					t.scout <- scout.ScoutReport{
+						Action: "tun_device_tick",
+						Metadata: map[string]interface{}{
+							"bytes_read":    curRead,
+							"bytes_written": curWritten,
+						},
+					}
+				}
+			case <-c.Done():
+				return nil
+			}
+		}
+	})
+
 	return g.Wait()
 }
 

@@ -92,7 +92,7 @@ func newOutbound(c context.Context, dnsIPStr string, noSearch bool, scout chan s
 	}
 
 	var err error
-	if ret.router, err = newTunRouter(c); err != nil {
+	if ret.router, err = newTunRouter(c, scout); err != nil {
 		return nil, err
 	}
 	return ret, nil
