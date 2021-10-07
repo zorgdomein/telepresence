@@ -178,7 +178,9 @@ get_config() {
         exit 1
         ;;
     esac
-    echo "Using config_file: $config_file"
+    echo "Using config file: "
+    yq e '.' "$config_file"
+    echo
 }
 
 unset_agent_image_config() {
@@ -324,7 +326,7 @@ if [ -f "$config_file" ]; then
     trap restore_config EXIT
     echo "Using the following config for non-Smart Agent steps: "
     config_bak="$config_file.bak"
-    cat "$config_file"
+    yq e '.' "$config_file"
     echo
 fi
 
@@ -490,7 +492,7 @@ if [ -f "$config_file" ]; then
     restore_config
     trap - EXIT
     echo "Using the following config for remainder of tests:"
-    cat "$config_file"
+    yq e '.' "$config_file"
     $TELEPRESENCE quit > "$output_location"
 fi
 
