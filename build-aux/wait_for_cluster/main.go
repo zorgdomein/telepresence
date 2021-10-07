@@ -26,7 +26,9 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("Unable to build clientset: %w", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	// GKE loadbalancers can take ~20 min to provision in the worst-case
+	// scenario, so we'll set our timeout quite a bit past that.
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 	return client.Retry(ctx, "connect", func(ctx context.Context) error {
 		fmt.Println("Trying to connect to cluster...")
