@@ -101,7 +101,7 @@ func (is *installSuite) SetupSuite() {
 	ctx := dlog.NewTestContext(is.T(), false)
 	is.kubeConfig = dtest.Kubeconfig(ctx)
 
-	suffix, isCI := os.LookupEnv("CIRCLE_SHA1")
+	suffix, isCI := os.LookupEnv("GITHUB_SHA")
 	is.isCI = isCI
 	if !isCI {
 		suffix = strconv.Itoa(os.Getpid())

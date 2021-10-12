@@ -74,7 +74,7 @@ func (ts *telepresenceSuite) SetupSuite() {
 	// Remove very verbose output from DTEST initialization
 	log.SetOutput(io.Discard)
 
-	suffix, isCi := os.LookupEnv("CIRCLE_SHA1")
+	suffix, isCi := os.LookupEnv("GITHUB_SHA")
 	if !isCi {
 		suffix = strconv.Itoa(os.Getpid())
 	}
